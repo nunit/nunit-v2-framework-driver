@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>NUnit.Engine.Drivers.Tests</RootNamespace>
-    <AssemblyName>nunit.v2.driver.tests</AssemblyName>
+    <AssemblyName>v2.test.assembly</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
