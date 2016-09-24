@@ -108,7 +108,11 @@ Task("Build")
     .IsDependentOn("NuGetRestore")
     .Does(() =>
     {
-		BuildSolution(SOLUTION_FILE, configuration);
+        DotNetBuild(SOLUTION_FILE, settings => settings
+            .WithTarget("Build")
+            .SetConfiguration(configuration)
+            .SetVerbosity(Verbosity.Minimal)
+        );
     });
 
 //////////////////////////////////////////////////////////////////////
@@ -140,67 +144,19 @@ Task("Test")
 // PACKAGE
 //////////////////////////////////////////////////////////////////////
 
-Task("CreatePackageDir")
-	.Does(() =>
-	{
-		CreateDirectory(PACKAGE_DIR);
-	});
-
-Task("CreateWorkingImage")
+Task("Package")
 	.IsDependentOn("Build")
-	.IsDependentOn("CreatePackageDir")
-	.Does(() =>
-	{
-		CreateDirectory(PACKAGE_IMAGE_DIR);
-		CleanDirectory(PACKAGE_IMAGE_DIR);
-
-		CopyFileToDirectory("LICENSE.txt", PACKAGE_IMAGE_DIR);
-		CopyFileToDirectory("nunit.v2.driver.addins", PACKAGE_IMAGE_DIR);
-
-		var binFiles = new FilePath[]
-		{
-			BIN_DIR + "nunit.core.dll",
-            BIN_DIR + "nunit.core.interfaces.dll",
-			BIN_DIR + "nunit.v2.driver.dll",
-		};
-
-		var binDir = PACKAGE_IMAGE_DIR + "bin/";
-		CreateDirectory(binDir);
-		CopyFiles(binFiles, binDir);
-	});
-
-Task("PackageZip")
-	.IsDependentOn("CreateWorkingImage")
-	.Does(() =>
-	{
-		Zip(PACKAGE_IMAGE_DIR, File(PACKAGE_DIR + packageName + ".zip"));
-	});
-
-Task("PackageNuGet")
-	.IsDependentOn("CreateWorkingImage")
 	.Does(() => 
 	{
+		CreateDirectory(PACKAGE_DIR);
+
         NuGetPack("nunit.v2.driver.nuspec", new NuGetPackSettings()
         {
             Version = packageVersion,
-            BasePath = PACKAGE_IMAGE_DIR,
+            BasePath = BIN_DIR,
             OutputDirectory = PACKAGE_DIR
         });
 	});
-
-//////////////////////////////////////////////////////////////////////
-// HELPER METHODS
-//////////////////////////////////////////////////////////////////////
-
-void BuildSolution(string solutionPath, string configuration)
-{
-	MSBuild(solutionPath, new MSBuildSettings()
-		.SetConfiguration(configuration)
-        .SetMSBuildPlatform(MSBuildPlatform.x86)
-		.SetVerbosity(Verbosity.Minimal)
-		.SetNodeReuse(false)
-	);
-}
 
 //////////////////////////////////////////////////////////////////////
 // TASK TARGETS
@@ -209,11 +165,6 @@ void BuildSolution(string solutionPath, string configuration)
 Task("Rebuild")
     .IsDependentOn("Clean")
 	.IsDependentOn("Build");
-
-Task("Package")
-	.IsDependentOn("Build")
-	.IsDependentOn("PackageZip")
-	.IsDependentOn("PackageNuGet");
 
 Task("Appveyor")
 	.IsDependentOn("Build")
