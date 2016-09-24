@@ -66,17 +66,10 @@ var packageName = "NUnitV2Driver-" + packageVersion;
 // Directories
 var PROJECT_DIR = Context.Environment.WorkingDirectory.FullPath + "/";
 var PACKAGE_DIR = PROJECT_DIR + "package/";
-var PACKAGE_IMAGE_DIR = PACKAGE_DIR + packageName + "/";
-var TOOLS_DIR = PROJECT_DIR + "tools/";
 var BIN_DIR = PROJECT_DIR + "bin/" + configuration + "/";
 
-// Solution
+// Files
 var SOLUTION_FILE = PROJECT_DIR + "nunit.v2.driver.sln";
-
-// Test Runner
-var NUNIT3_CONSOLE = TOOLS_DIR + "NUnit.ConsoleRunner/tools/nunit3-console.exe";
-
-// Test Assembly
 var DRIVER_TESTS = BIN_DIR + "nunit.v2.driver.tests.dll";
 
 //////////////////////////////////////////////////////////////////////
@@ -123,21 +116,7 @@ Task("Test")
 	.IsDependentOn("Build")
 	.Does(() =>
 	{
-		int rc = StartProcess(
-			NUNIT3_CONSOLE,
-			new ProcessSettings()
-			{
-				Arguments = DRIVER_TESTS
-			});
-
-		if (rc != 0)
-		{
-			var message = rc > 0
-				? string.Format("Test failure: {0} tests failed", rc)
-				: string.Format("Test exited with rc = {0}", rc);
-
-			throw new CakeException(message);
-		}
+		NUnit3(DRIVER_TESTS);
 	});
 
 //////////////////////////////////////////////////////////////////////
