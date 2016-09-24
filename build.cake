@@ -155,16 +155,13 @@ Task("CreateWorkingImage")
 		CleanDirectory(PACKAGE_IMAGE_DIR);
 
 		CopyFileToDirectory("LICENSE.txt", PACKAGE_IMAGE_DIR);
+		CopyFileToDirectory("nunit.v2.driver.addins", PACKAGE_IMAGE_DIR);
 
 		var binFiles = new FilePath[]
 		{
-			BIN_DIR + "NUnit3.TestAdapter.dll",
-            BIN_DIR + "nunit.engine.dll",
-			BIN_DIR + "nunit.engine.api.dll",
-			BIN_DIR + "Mono.Cecil.dll",
-			BIN_DIR + "Mono.Cecil.Pdb.dll",
-			BIN_DIR + "Mono.Cecil.Mdb.dll",
-			BIN_DIR + "Mono.Cecil.Rocks.dll"
+			BIN_DIR + "nunit.core.dll",
+            BIN_DIR + "nunit.core.interfaces.dll",
+			BIN_DIR + "nunit.v2.driver.dll",
 		};
 
 		var binDir = PACKAGE_IMAGE_DIR + "bin/";
@@ -183,7 +180,7 @@ Task("PackageNuGet")
 	.IsDependentOn("CreateWorkingImage")
 	.Does(() => 
 	{
-        NuGetPack("nuget/NUnit3TestAdapter.nuspec", new NuGetPackSettings()
+        NuGetPack("nunit.v2.driver.nuspec", new NuGetPackSettings()
         {
             Version = packageVersion,
             BasePath = PACKAGE_IMAGE_DIR,
