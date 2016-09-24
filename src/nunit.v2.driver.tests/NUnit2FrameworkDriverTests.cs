@@ -37,7 +37,7 @@ namespace NUnit.Engine.Drivers.Tests
         private const string EMPTY_FILTER = "<filter/>";
         private const int TESTCASECOUNT = 74;
 
-        private static readonly string V2_TEST_PATH = Path.GetFullPath(V2_TEST_DIR);
+        private static readonly string V2_TEST_PATH = Path.Combine(TestContext.CurrentContext.TestDirectory, V2_TEST_DIR);
         private static readonly string ASSEMBLY_PATH = Path.Combine(V2_TEST_PATH, ASSEMBLY_NAME);
 
         private NUnit2FrameworkDriver _driver;
@@ -45,6 +45,7 @@ namespace NUnit.Engine.Drivers.Tests
         [OneTimeSetUp]
         public void CreateDriver()
         {
+            Console.WriteLine(ASSEMBLY_PATH);
             var domain = AppDomain.CreateDomain(V2_DOMAIN_NAME, null, V2_TEST_PATH, null, false);
             _driver = new NUnit2FrameworkDriver(domain);
 

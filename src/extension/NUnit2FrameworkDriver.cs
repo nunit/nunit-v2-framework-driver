@@ -75,7 +75,7 @@ namespace NUnit.Engine.Drivers
         public string Load(string testAssemblyPath, IDictionary<string, object> settings)
         {
             if (!File.Exists(testAssemblyPath))
-                throw new ArgumentException("testAssemblyPath", "Framework driver Load called with a file name that doesn't exist.");
+                throw new ArgumentException("Framework driver Load called with a file name that doesn't exist.", "testAssemblyPath");
 
             _testAssemblyPath = testAssemblyPath;
             _name = Escape(Path.GetFileName(_testAssemblyPath));
