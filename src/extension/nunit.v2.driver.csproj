@@ -56,6 +56,13 @@
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>mkdir $(SolutionDir)tools\NUnit.Extension.V2FrameworkDriver\tools
+copy $(TargetPath) $(SolutionDir)tools\NUnit.Extension.V2FrameworkDriver\tools
+copy $(TargetDir)nunit.core.dll $(SolutionDir)tools\NUnit.Extension.V2FrameworkDriver\tools
+copy $(TargetDir)nunit.core.interfaces.dll $(SolutionDir)tools\NUnit.Extension.V2FrameworkDriver\tools
+</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

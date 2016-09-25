@@ -70,7 +70,8 @@ var BIN_DIR = PROJECT_DIR + "bin/" + configuration + "/";
 
 // Files
 var SOLUTION_FILE = PROJECT_DIR + "nunit.v2.driver.sln";
-var DRIVER_TESTS = BIN_DIR + "nunit.v2.driver.tests.dll";
+var UNIT_TESTS = BIN_DIR + "nunit.v2.driver.tests.dll";
+var INTEGRATION_TESTS = BIN_DIR + "v2-tests/v2-test-assembly.dll";
 
 //////////////////////////////////////////////////////////////////////
 // CLEAN
@@ -116,7 +117,8 @@ Task("Test")
 	.IsDependentOn("Build")
 	.Does(() =>
 	{
-		NUnit3(DRIVER_TESTS);
+		NUnit3(UNIT_TESTS);
+		NUnit3(INTEGRATION_TESTS);
 	});
 
 //////////////////////////////////////////////////////////////////////
