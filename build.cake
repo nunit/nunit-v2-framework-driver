@@ -1,6 +1,14 @@
 #tool nuget:?package=NUnit.ConsoleRunner&version=3.4.1
 
 //////////////////////////////////////////////////////////////////////
+// PROJECT-SPECIFIC
+//////////////////////////////////////////////////////////////////////
+var SOLUTION_FILE = "nunit.v2.driver.sln";
+var NUSPEC_FILE = "nunit.v2.driver.nuspec";
+var UNIT_TEST_ASSEMBLY = "nunit.v2.driver.tests.dll";
+var INTEGRATION_TEST_ASSEMBLY = "v2-tests/v2-test-assembly.dll";
+
+//////////////////////////////////////////////////////////////////////
 // ARGUMENTS
 //////////////////////////////////////////////////////////////////////
 
@@ -57,8 +65,6 @@ if (BuildSystem.IsRunningOnAppVeyor)
 	AppVeyor.UpdateBuildVersion(packageVersion);
 }
 
-var packageName = "NUnitV2Driver-" + packageVersion;
-
 //////////////////////////////////////////////////////////////////////
 // DEFINE RUN CONSTANTS
 //////////////////////////////////////////////////////////////////////
@@ -69,9 +75,17 @@ var PACKAGE_DIR = PROJECT_DIR + "package/";
 var BIN_DIR = PROJECT_DIR + "bin/" + configuration + "/";
 
 // Files
-var SOLUTION_FILE = PROJECT_DIR + "nunit.v2.driver.sln";
-var UNIT_TESTS = BIN_DIR + "nunit.v2.driver.tests.dll";
-var INTEGRATION_TESTS = BIN_DIR + "v2-tests/v2-test-assembly.dll";
+var SOLUTION_PATH = PROJECT_DIR + SOLUTION_FILE;
+var NUSPEC_PATH = PROJECT_DIR + NUSPEC_FILE;
+var UNIT_TEST_PATH = BIN_DIR + UNIT_TEST_ASSEMBLY;
+var INTEGRATION_TEST_PATH = BIN_DIR + INTEGRATION_TEST_ASSEMBLY;
+
+// Package sources for nuget restore
+var PACKAGE_SOURCE = new string[]
+	{
+		"https://www.nuget.org/api/v2",
+		"https://www.myget.org/F/nunit/api/v2"
+	};
 
 //////////////////////////////////////////////////////////////////////
 // CLEAN
@@ -91,7 +105,10 @@ Task("Clean")
 Task("NuGetRestore")
     .Does(() =>
 {
-    NuGetRestore(SOLUTION_FILE);
+    NuGetRestore(SOLUTION_PATH, new NuGetRestoreSettings()
+	{
+		Source = PACKAGE_SOURCE
+	});
 });
 
 //////////////////////////////////////////////////////////////////////
@@ -102,7 +119,7 @@ Task("Build")
     .IsDependentOn("NuGetRestore")
     .Does(() =>
     {
-        DotNetBuild(SOLUTION_FILE, settings => settings
+        DotNetBuild(SOLUTION_PATH, settings => settings
             .WithTarget("Build")
             .SetConfiguration(configuration)
             .SetVerbosity(Verbosity.Minimal)
@@ -117,8 +134,8 @@ Task("Test")
 	.IsDependentOn("Build")
 	.Does(() =>
 	{
-		NUnit3(UNIT_TESTS);
-		NUnit3(INTEGRATION_TESTS);
+		NUnit3(UNIT_TEST_PATH);
+		NUnit3(INTEGRATION_TEST_PATH);
 	});
 
 //////////////////////////////////////////////////////////////////////
@@ -131,7 +148,7 @@ Task("Package")
 	{
 		CreateDirectory(PACKAGE_DIR);
 
-        NuGetPack("nunit.v2.driver.nuspec", new NuGetPackSettings()
+        NuGetPack(NUSPEC_PATH, new NuGetPackSettings()
         {
             Version = packageVersion,
             BasePath = BIN_DIR,
