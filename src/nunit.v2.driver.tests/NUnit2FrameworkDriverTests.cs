@@ -47,10 +47,8 @@ namespace NUnit.Engine.Drivers.Tests
         {
             Console.WriteLine(ASSEMBLY_PATH);
             var domain = AppDomain.CreateDomain(V2_DOMAIN_NAME, null, V2_TEST_PATH, null, false);
-            _driver = new NUnit2FrameworkDriver(domain);
-
+            _driver = new NUnit2FrameworkDriver(domain) { ID = "1" };
             var settings = new Dictionary<string, object>();
-
             PerformBasicResultChecks(_driver.Load(ASSEMBLY_PATH, settings));
         }
 
