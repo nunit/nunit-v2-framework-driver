@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using NUnit.Core;
+using NUnit.Core.Filters;
 using NUnit.Engine.Extensibility;
 
 namespace NUnit.Engine.Drivers
@@ -159,28 +160,35 @@ namespace NUnit.Engine.Drivers
             get { return string.IsNullOrEmpty(ID) ? "1" : ID + "-1";}
         }
 
-        private static ITestFilter CreateNUnit2TestFilter(string filter)
+        private static ITestFilter CreateNUnit2TestFilter(string filterXml)
         {
-            if (string.IsNullOrEmpty(filter))
+            if (string.IsNullOrEmpty(filterXml))
                 return Core.TestFilter.Empty;
 
             var doc = new XmlDocument();
-            doc.LoadXml(filter);
+            doc.LoadXml(filterXml);
             var topNode = doc.FirstChild;
             if (topNode.Name != "filter")
                 throw new Exception("Invalid filter passed to NUnit V2 driver: no filter element at top level");
 
+            ITestFilter filter;
             switch (topNode.ChildNodes.Count)
             {
                 case 0:
-                    return Core.TestFilter.Empty;
-
+                    filter = Core.TestFilter.Empty;
+                break;
                 case 1:
-                    return FromXml(topNode.FirstChild);
-
+                    filter = FromXml(topNode.FirstChild);
+                break;
                 default:
-                    return FromXml(topNode);
+                    filter = FromXml(topNode);
+                break;
             }
+
+            if (filter is Core.Filters.NotFilter)
+              ((Core.Filters.NotFilter)filter).TopLevel = true;
+
+            return filter;
         }
 
         private static readonly char[] COMMA = { ',' };
