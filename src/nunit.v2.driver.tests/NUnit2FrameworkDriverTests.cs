@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Xml;
 using NUnit.Framework;
@@ -35,7 +36,8 @@ namespace NUnit.Engine.Drivers.Tests
         private const string V2_TEST_DIR = "v2-tests";
         private const string V2_DOMAIN_NAME = "v2_test_domain";
         private const string EMPTY_FILTER = "<filter/>";
-        private const int TESTCASECOUNT = 74;
+        private const int TESTCASECOUNT = 76;
+        private const int EXPLICITTESTS = 1;
 
         private static readonly string V2_TEST_PATH = Path.Combine(TestContext.CurrentContext.TestDirectory, V2_TEST_DIR);
         private static readonly string ASSEMBLY_PATH = Path.Combine(V2_TEST_PATH, ASSEMBLY_NAME);
@@ -61,7 +63,21 @@ namespace NUnit.Engine.Drivers.Tests
         [Test]
         public void CountTestCases()
         {
-            Assert.That(_driver.CountTestCases(EMPTY_FILTER), Is.EqualTo(TESTCASECOUNT));
+            Assert.That(_driver.CountTestCases(EMPTY_FILTER), Is.EqualTo(TESTCASECOUNT -EXPLICITTESTS));
+        }
+
+        [Test]
+        public void ExplicitTestsAreExcluded()
+        {
+            var filter = "<filter><not><not><cat>ExplicitFiltering</cat></not></not></filter>";
+            Assert.That(_driver.CountTestCases(filter), Is.EqualTo(EXPLICITTESTS));
+        }
+
+        [Test]
+        public void ExplicitTestsAreIncluded()
+        {
+            var filter = "<filter><cat>ExplicitFiltering</cat></filter>";
+            Assert.That(_driver.CountTestCases(filter), Is.EqualTo(2));
         }
 
         [Test]
@@ -69,7 +85,7 @@ namespace NUnit.Engine.Drivers.Tests
         {
             XmlNode result = GetResult(_driver.Run(null, EMPTY_FILTER));
             PerformBasicResultChecks(result);
-            Assert.That(result.SelectNodes("//test-case").Count, Is.EqualTo(TESTCASECOUNT));
+            Assert.That(result.SelectNodes("//test-case").Count, Is.EqualTo(TESTCASECOUNT-EXPLICITTESTS));
         }
 
         private XmlNode GetResult(string xml)

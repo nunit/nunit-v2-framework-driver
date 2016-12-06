@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssertSyntaxTests.cs" />
+    <Compile Include="ExplicitFiltering.cs" />
     <Compile Include="PairwiseTests.cs" />
     <Compile Include="ParameterizedTestFixtureTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
