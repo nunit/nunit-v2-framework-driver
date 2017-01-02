@@ -8,7 +8,7 @@
     <owners>Charlie Poole</owners>
     <licenseUrl>http://nunit.org/nuget/nunit3-license.txt</licenseUrl>
     <projectUrl>http://nunit.org</projectUrl>
-    <iconUrl>http://nunit.org/nuget/nunitv3_32x32.png</iconUrl>
+    <iconUrl>https://cdn.rawgit.com/nunit/resources/master/images/icon/nunit_256.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <summary>NUnit Engine extension allowing execution of tests using NUnit 2.x.</summary>
     <description>This extension allows NUnit to load and run tests compiled against earlier versions of the NUnit framework. Versions 2.0 through 2.6.4 are supported.</description>
