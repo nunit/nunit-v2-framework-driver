@@ -1,4 +1,4 @@
-#tool nuget:?package=NUnit.ConsoleRunner&version=3.4.1
+#tool nuget:?package=NUnit.ConsoleRunner&version=3.5.0
 
 //////////////////////////////////////////////////////////////////////
 // PROJECT-SPECIFIC
@@ -49,6 +49,8 @@ if (BuildSystem.IsRunningOnAppVeyor)
 
 			if (isPullRequest)
 				suffix += "-pr-" + AppVeyor.Environment.PullRequest.Number;
+			else if (AppVeyor.Environment.Repository.Branch.StartsWith("release", StringComparison.OrdinalIgnoreCase))
+				suffix += "-pre-" + buildNumber;
 			else
 				suffix += "-" + branch;
 
