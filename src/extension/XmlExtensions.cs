@@ -149,12 +149,17 @@ namespace NUnit.Engine.Drivers
 
             if (result.Test.IsSuite)
             {
-                // TODO: These values all should be calculated
-                thisNode.AddAttribute("total", result.Test.TestCount.ToString());
-                thisNode.AddAttribute("passed", "0");
-                thisNode.AddAttribute("failed", "0");
-                thisNode.AddAttribute("inconclusive", "0");
-                thisNode.AddAttribute("skipped", "0");
+                var resultDict = CountResultStates(result);
+                var passed = CountStatesInResultDict(resultDict, ResultState.Success);
+                var failed = CountStatesInResultDict(resultDict, ResultState.Failure, ResultState.Error, ResultState.Cancelled, ResultState.NotRunnable);
+                var inconclusive = CountStatesInResultDict(resultDict, ResultState.Inconclusive);
+                var skipped = CountStatesInResultDict(resultDict, ResultState.Skipped, ResultState.Ignored);
+
+                thisNode.AddAttribute("total", (passed + failed + inconclusive + skipped).ToString());
+                thisNode.AddAttribute("passed", passed.ToString());
+                thisNode.AddAttribute("failed", failed.ToString());
+                thisNode.AddAttribute("inconclusive", inconclusive.ToString());
+                thisNode.AddAttribute("skipped", skipped.ToString());
             }
             thisNode.AddAttribute("asserts", result.AssertCount.ToString());
 
@@ -290,6 +295,49 @@ namespace NUnit.Engine.Drivers
         #endregion
 
         #region Helper Methods
+
+        // Counts the number of results
+        private static Dictionary<ResultState, int> CountResultStates(TestResult result, Dictionary<ResultState, int> dict = null)
+        {
+            if (dict == null)
+                dict = new Dictionary<ResultState, int>();
+
+            // if it is a leaf: add state to count
+            const string methodIdentifier = "TestMethod";
+            if (result.Test.TestType == methodIdentifier)
+            {
+                int count;
+                var state = result.ResultState;
+                dict.TryGetValue(state, out count);
+                dict[state] = count + 1;
+            }
+
+            // ignore non-methods without tests
+            if (result.Results == null)
+                return dict;
+
+            // else go recursive and count all leaf states
+            foreach (TestResult r in result.Results)
+            {
+                CountResultStates(r, dict);
+            }
+
+            return dict;
+        }
+
+        private static int CountStatesInResultDict(Dictionary<ResultState, int> dict, params ResultState[] states)
+        {
+            int count = 0;
+
+            foreach (var state in states)
+            {
+                int tmpCount;
+                dict.TryGetValue(state, out tmpCount);
+                count += tmpCount;
+            }
+
+            return count;
+        }
 
         // Returns ResultState translated to a v3 string representation
         private static string GetTranslatedResultState(ResultState resultState)
