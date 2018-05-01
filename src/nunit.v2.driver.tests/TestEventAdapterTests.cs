@@ -102,7 +102,7 @@ namespace NUnit.Engine.Drivers.Tests
             result.Time = 12.5;
             _eventAdapter.SuiteFinished(result);
             string expected = string.Format(
-                "<test-suite type=\"TestSuite\" id=\"{0}-{1}\" name=\"{2}\" fullname=\"{3}\" runstate=\"Runnable\" testcasecount=\"1234\" result=\"Failed\" duration=\"12.500000\" total=\"1234\" passed=\"0\" failed=\"0\" inconclusive=\"0\" skipped=\"0\" asserts=\"9999\"><failure><message><![CDATA[Something failed!]]></message></failure></test-suite>", 
+                "<test-suite type=\"TestSuite\" id=\"{0}-{1}\" name=\"{2}\" fullname=\"{3}\" runstate=\"Runnable\" testcasecount=\"1234\" result=\"Failed\" duration=\"12.500000\" total=\"0\" passed=\"0\" failed=\"0\" inconclusive=\"0\" skipped=\"0\" asserts=\"9999\"><failure><message><![CDATA[Something failed!]]></message></failure></test-suite>", 
                 RUNNER_ID, TEST_ID, TEST_NAME, FULL_NAME);
             Assert.That(_report, Is.EqualTo(expected));
         }
