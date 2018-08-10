@@ -51,42 +51,42 @@ var packageVersion = VERSION + dbgSuffix;
 
 if (BuildSystem.IsRunningOnAppVeyor)
 {
-	var tag = AppVeyor.Environment.Repository.Tag;
+    var tag = AppVeyor.Environment.Repository.Tag;
 
-	if (tag.IsTag)
-	{
-		packageVersion = tag.Name;
-	}
-	else
-	{
-		var buildNumber = AppVeyor.Environment.Build.Number.ToString("00000");
-		var branch = AppVeyor.Environment.Repository.Branch;
-		var isPullRequest = AppVeyor.Environment.PullRequest.IsPullRequest;
+    if (tag.IsTag)
+    {
+        packageVersion = tag.Name;
+    }
+    else
+    {
+        var buildNumber = AppVeyor.Environment.Build.Number.ToString("00000");
+        var branch = AppVeyor.Environment.Repository.Branch;
+        var isPullRequest = AppVeyor.Environment.PullRequest.IsPullRequest;
 
-		if (branch == "master" && !isPullRequest)
-		{
-			packageVersion = VERSION + "-dev-" + buildNumber + dbgSuffix;
-		}
-		else
-		{
-			var suffix = "-ci-" + buildNumber + dbgSuffix;
+        if (branch == "master" && !isPullRequest)
+        {
+            packageVersion = VERSION + "-dev-" + buildNumber + dbgSuffix;
+        }
+        else
+        {
+            var suffix = "-ci-" + buildNumber + dbgSuffix;
 
-			if (isPullRequest)
-				suffix += "-pr-" + AppVeyor.Environment.PullRequest.Number;
-			else
-				suffix += "-" + branch;
+            if (isPullRequest)
+                suffix += "-pr-" + AppVeyor.Environment.PullRequest.Number;
+            else
+                suffix += "-" + branch;
 
-			// Nuget limits "special version part" to 20 chars. Add one for the hyphen.
-			if (suffix.Length > 21)
-				suffix = suffix.Substring(0, 21);
+            // Nuget limits "special version part" to 20 chars. Add one for the hyphen.
+            if (suffix.Length > 21)
+                suffix = suffix.Substring(0, 21);
 
             suffix = suffix.Replace(".", "");
 
-			packageVersion = VERSION + suffix;
-		}
-	}
+            packageVersion = VERSION + suffix;
+        }
+    }
 
-	AppVeyor.UpdateBuildVersion(packageVersion);
+    AppVeyor.UpdateBuildVersion(packageVersion);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -102,21 +102,21 @@ var OUTPUT_DIR = PROJECT_DIR + "output/";
 // Adjust BIN_SRC if --binaries option was given
 if (binaries != null)
 {
-	BIN_SRC = binaries;
-	if (!System.IO.Path.IsPathRooted(binaries))
-	{
-		BIN_SRC = PROJECT_DIR + binaries;
-		if (!BIN_SRC.EndsWith("/"))
-			BIN_SRC += "/";
-	}
+    BIN_SRC = binaries;
+    if (!System.IO.Path.IsPathRooted(binaries))
+    {
+        BIN_SRC = PROJECT_DIR + binaries;
+        if (!BIN_SRC.EndsWith("/"))
+            BIN_SRC += "/";
+    }
 }
 
 // Package sources for nuget restore
 var PACKAGE_SOURCE = new string[]
-	{
-		"https://www.nuget.org/api/v2",
-		"https://www.myget.org/F/nunit/api/v2"
-	};
+    {
+        "https://www.nuget.org/api/v2",
+        "https://www.myget.org/F/nunit/api/v2"
+    };
 
 //////////////////////////////////////////////////////////////////////
 // CLEAN
@@ -137,9 +137,9 @@ Task("NuGetRestore")
     .Does(() =>
 {
     NuGetRestore(SOLUTION_FILE, new NuGetRestoreSettings()
-	{
-		Source = PACKAGE_SOURCE
-	});
+    {
+        Source = PACKAGE_SOURCE
+    });
 });
 
 //////////////////////////////////////////////////////////////////////
@@ -150,27 +150,27 @@ Task("Build")
     .IsDependentOn("NuGetRestore")
     .Does(() =>
     {
-		if (binaries != null)
-		    throw new Exception("The --binaries option may only be specified when re-packaging an existing build.");
+        if (binaries != null)
+            throw new Exception("The --binaries option may only be specified when re-packaging an existing build.");
 
-		if(IsRunningOnWindows())
-		{
-			MSBuild(SOLUTION_FILE, new MSBuildSettings()
-				.SetConfiguration(configuration)
-				.SetMSBuildPlatform(MSBuildPlatform.Automatic)
-				.SetVerbosity(Verbosity.Minimal)
-				.SetNodeReuse(false)
-				.SetPlatformTarget(PlatformTarget.MSIL)
-			);
-		}
-		else
-		{
-			XBuild(SOLUTION_FILE, new XBuildSettings()
-				.WithTarget("Build")
-				.WithProperty("Configuration", configuration)
-				.SetVerbosity(Verbosity.Minimal)
-			);
-		}
+        if(IsRunningOnWindows())
+        {
+            MSBuild(SOLUTION_FILE, new MSBuildSettings()
+                .SetConfiguration(configuration)
+                .SetMSBuildPlatform(MSBuildPlatform.Automatic)
+                .SetVerbosity(Verbosity.Minimal)
+                .SetNodeReuse(false)
+                .SetPlatformTarget(PlatformTarget.MSIL)
+            );
+        }
+        else
+        {
+            XBuild(SOLUTION_FILE, new XBuildSettings()
+                .WithTarget("Build")
+                .WithProperty("Configuration", configuration)
+                .SetVerbosity(Verbosity.Minimal)
+            );
+        }
     });
 
 //////////////////////////////////////////////////////////////////////
@@ -178,12 +178,12 @@ Task("Build")
 //////////////////////////////////////////////////////////////////////
 
 Task("Test")
-	.IsDependentOn("Build")
-	.Does(() =>
-	{
-		NUnit3(BIN_DIR + UNIT_TEST_ASSEMBLY);
-		NUnit3(BIN_DIR + INTEGRATION_TEST_ASSEMBLY);
-	});
+    .IsDependentOn("Build")
+    .Does(() =>
+    {
+        NUnit3(BIN_DIR + UNIT_TEST_ASSEMBLY);
+        NUnit3(BIN_DIR + INTEGRATION_TEST_ASSEMBLY);
+    });
 
 //////////////////////////////////////////////////////////////////////
 // PACKAGE
@@ -200,80 +200,80 @@ var DOCS_URL = new Uri(WIKI_PAGE);
 var MAILING_LIST_URL = new Uri("https://groups.google.com/forum/#!forum/nunit-discuss");
 
 Task("RePackageNuGet")
-	.Does(() => 
-	{
-		CreateDirectory(OUTPUT_DIR);
+    .Does(() => 
+    {
+        CreateDirectory(OUTPUT_DIR);
 
         NuGetPack(
-			new NuGetPackSettings()
-			{
-				Id = NUGET_ID,
-				Version = nugetVersion ?? packageVersion,
-				Title = TITLE,
-				Authors = AUTHORS,
-				Owners = OWNERS,
-				Description = DESCRIPTION,
-				Summary = SUMMARY,
-				ProjectUrl = PROJECT_URL,
-				IconUrl = ICON_URL,
-				LicenseUrl = LICENSE_URL,
-				RequireLicenseAcceptance = false,
-				Copyright = COPYRIGHT,
-				ReleaseNotes = RELEASE_NOTES,
-				Tags = TAGS,
-				//Language = "en-US",
-				OutputDirectory = OUTPUT_DIR,
-				Files = new [] {
-					new NuSpecContent { Source = PROJECT_DIR + "LICENSE.txt" },
-					new NuSpecContent { Source = PROJECT_DIR + "CHANGES.txt" },
-					new NuSpecContent { Source = PROJECT_DIR + "nunit.v2.driver.addins", Target = "tools" },
-					new NuSpecContent { Source = BIN_SRC + "nunit.v2.driver.dll", Target = "tools" },
-					new NuSpecContent { Source = BIN_SRC + "nunit.core.dll", Target = "tools" },
-					new NuSpecContent { Source = BIN_SRC + "nunit.core.interfaces.dll", Target = "tools" }
-				}
-			});
-	});
+            new NuGetPackSettings()
+            {
+                Id = NUGET_ID,
+                Version = nugetVersion ?? packageVersion,
+                Title = TITLE,
+                Authors = AUTHORS,
+                Owners = OWNERS,
+                Description = DESCRIPTION,
+                Summary = SUMMARY,
+                ProjectUrl = PROJECT_URL,
+                IconUrl = ICON_URL,
+                LicenseUrl = LICENSE_URL,
+                RequireLicenseAcceptance = false,
+                Copyright = COPYRIGHT,
+                ReleaseNotes = RELEASE_NOTES,
+                Tags = TAGS,
+                //Language = "en-US",
+                OutputDirectory = OUTPUT_DIR,
+                Files = new [] {
+                    new NuSpecContent { Source = PROJECT_DIR + "LICENSE.txt" },
+                    new NuSpecContent { Source = PROJECT_DIR + "CHANGES.txt" },
+                    new NuSpecContent { Source = PROJECT_DIR + "nunit.v2.driver.addins", Target = "tools" },
+                    new NuSpecContent { Source = BIN_SRC + "nunit.v2.driver.dll", Target = "tools" },
+                    new NuSpecContent { Source = BIN_SRC + "nunit.core.dll", Target = "tools" },
+                    new NuSpecContent { Source = BIN_SRC + "nunit.core.interfaces.dll", Target = "tools" }
+                }
+            });
+    });
 
 Task("RePackageChocolatey")
-	.Does(() =>
-	{
-	CreateDirectory(OUTPUT_DIR);
+    .Does(() =>
+    {
+    CreateDirectory(OUTPUT_DIR);
 
-	ChocolateyPack(
-		new ChocolateyPackSettings()
-		{
-			Id = CHOCO_ID,
-			Version = chocoVersion ?? packageVersion,
-			Title = TITLE,
-			Authors = AUTHORS,
-			Owners = OWNERS,
-			Description = DESCRIPTION,
-			Summary = SUMMARY,
-			ProjectUrl = PROJECT_URL,
-			IconUrl = ICON_URL,
-			LicenseUrl = LICENSE_URL,
-			RequireLicenseAcceptance = false,
-			Copyright = COPYRIGHT,
-			ProjectSourceUrl = PROJECT_SOURCE_URL,
-			DocsUrl= DOCS_URL,
-			BugTrackerUrl = BUG_TRACKER_URL,
-			PackageSourceUrl = PACKAGE_SOURCE_URL,
-			MailingListUrl = MAILING_LIST_URL,
-			ReleaseNotes = RELEASE_NOTES,
-			Tags = TAGS,
-			//Language = "en-US",
-			OutputDirectory = OUTPUT_DIR,
-			Files = new [] {
-				new ChocolateyNuSpecContent { Source = PROJECT_DIR + "LICENSE.txt", Target = "tools" },
-				new ChocolateyNuSpecContent { Source = PROJECT_DIR + "CHANGES.txt", Target = "tools" },
-				new ChocolateyNuSpecContent { Source = PROJECT_DIR + "VERIFICATION.txt", Target = "tools" },
-				new ChocolateyNuSpecContent { Source = PROJECT_DIR + "nunit.v2.driver.addins", Target = "tools" },
-				new ChocolateyNuSpecContent { Source = BIN_SRC + "nunit.v2.driver.dll", Target = "tools" },
-				new ChocolateyNuSpecContent { Source = BIN_SRC + "nunit.core.dll", Target = "tools" },
-				new ChocolateyNuSpecContent { Source = BIN_SRC + "nunit.core.interfaces.dll", Target = "tools" }
-			}
-		});
-	});
+    ChocolateyPack(
+        new ChocolateyPackSettings()
+        {
+            Id = CHOCO_ID,
+            Version = chocoVersion ?? packageVersion,
+            Title = TITLE,
+            Authors = AUTHORS,
+            Owners = OWNERS,
+            Description = DESCRIPTION,
+            Summary = SUMMARY,
+            ProjectUrl = PROJECT_URL,
+            IconUrl = ICON_URL,
+            LicenseUrl = LICENSE_URL,
+            RequireLicenseAcceptance = false,
+            Copyright = COPYRIGHT,
+            ProjectSourceUrl = PROJECT_SOURCE_URL,
+            DocsUrl= DOCS_URL,
+            BugTrackerUrl = BUG_TRACKER_URL,
+            PackageSourceUrl = PACKAGE_SOURCE_URL,
+            MailingListUrl = MAILING_LIST_URL,
+            ReleaseNotes = RELEASE_NOTES,
+            Tags = TAGS,
+            //Language = "en-US",
+            OutputDirectory = OUTPUT_DIR,
+            Files = new [] {
+                new ChocolateyNuSpecContent { Source = PROJECT_DIR + "LICENSE.txt", Target = "tools" },
+                new ChocolateyNuSpecContent { Source = PROJECT_DIR + "CHANGES.txt", Target = "tools" },
+                new ChocolateyNuSpecContent { Source = PROJECT_DIR + "VERIFICATION.txt", Target = "tools" },
+                new ChocolateyNuSpecContent { Source = PROJECT_DIR + "nunit.v2.driver.addins", Target = "tools" },
+                new ChocolateyNuSpecContent { Source = BIN_SRC + "nunit.v2.driver.dll", Target = "tools" },
+                new ChocolateyNuSpecContent { Source = BIN_SRC + "nunit.core.dll", Target = "tools" },
+                new ChocolateyNuSpecContent { Source = BIN_SRC + "nunit.core.interfaces.dll", Target = "tools" }
+            }
+        });
+    });
 
 //////////////////////////////////////////////////////////////////////
 // TASK TARGETS
@@ -281,24 +281,24 @@ Task("RePackageChocolatey")
 
 Task("Rebuild")
     .IsDependentOn("Clean")
-	.IsDependentOn("Build");
+    .IsDependentOn("Build");
 
 Task("Package")
-	.IsDependentOn("Build")
-	.IsDependentOn("RePackage");
+    .IsDependentOn("Build")
+    .IsDependentOn("RePackage");
 
 Task("RePackage")
-	.IsDependentOn("RePackageNuGet")
-	.IsDependentOn("RePackageChocolatey");
+    .IsDependentOn("RePackageNuGet")
+    .IsDependentOn("RePackageChocolatey");
 
 Task("Appveyor")
-	.IsDependentOn("Build")
-	.IsDependentOn("Test")
-	.IsDependentOn("Package");
+    .IsDependentOn("Build")
+    .IsDependentOn("Test")
+    .IsDependentOn("Package");
 
 Task("Travis")
-	.IsDependentOn("Build")
-	.IsDependentOn("Test");
+    .IsDependentOn("Build")
+    .IsDependentOn("Test");
 
 Task("Default")
     .IsDependentOn("Build");
