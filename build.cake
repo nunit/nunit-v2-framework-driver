@@ -226,7 +226,7 @@ Task("RePackageNuGet")
                 Repository = new NuGetRepository {
                     Type = "git",
                     Url = GITHUB_SITE
-                }
+                },
                 Files = new [] {
                     new NuSpecContent { Source = PROJECT_DIR + "LICENSE.txt" },
                     new NuSpecContent { Source = PROJECT_DIR + "CHANGES.txt" },
