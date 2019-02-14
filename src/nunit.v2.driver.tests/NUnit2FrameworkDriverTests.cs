@@ -55,9 +55,13 @@ namespace NUnit.Engine.Drivers.Tests
         }
 
         [Test]
-        public void Explore()
+        public void ExploreWithFilter()
         {
-            PerformBasicResultChecks(_driver.Explore(EMPTY_FILTER));
+            var filter = "<filter><not><not><cat>ExplicitFiltering</cat></not></not></filter>";
+
+            XmlNode result = GetResult(_driver.Explore(filter));
+            PerformBasicResultChecks(result);
+            Assert.That(result.SelectNodes("//test-case").Count, Is.EqualTo(EXPLICITTESTS));
         }
 
         [Test]

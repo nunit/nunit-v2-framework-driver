@@ -137,12 +137,30 @@ namespace NUnit.Engine.Drivers
             if (Runner.Test == null)
                 return String.Format(LOAD_RESULT_FORMAT, TestID, _name, _fullname, "Error loading test");
 
-            return Runner.Test.ToXml(true).OuterXml;
+            // Make a copy so that we can edit the list of tests to filter out.
+            var runnerTest = Runner.Test;
+            PruneTests(runnerTest, CreateNUnit2TestFilter(filter));
+
+            return runnerTest.ToXml(true).OuterXml;
         }
 
         public void StopRun(bool force)
         {
             Runner.CancelRun();
+        }
+
+        private bool PruneTests(ITest test, ITestFilter filter)
+        {
+            if (test.IsSuite)
+            {
+                for (int i = test.Tests.Count - 1; i >= 0 ; i--)
+                {
+                    if (!PruneTests(test.Tests[i] as ITest, filter))
+                        test.Tests.RemoveAt(i);
+                }
+                return test.Tests.Count > 0;
+            }
+            return filter.Pass(test);
         }
 
         private static string Escape(string original)
