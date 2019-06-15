@@ -160,7 +160,17 @@ namespace NUnit.Engine.Drivers
             get { return string.IsNullOrEmpty(ID) ? "1" : ID + "-1";}
         }
 
-        private static ITestFilter CreateNUnit2TestFilter(string filterXml)
+        // Constants are public so they can be used by tests
+        public const string NO_FILTER_ELEMENT_MESSAGE = "Invalid filter passed to NUnit V2 driver: no filter element at top level";
+        public const string NO_REGULAR_EXPRESSIONS_MESSAGE = "Filters with regular expressions are only supported when running NUnit 3 tests";
+        public const string NO_ID_FILTER_MESSAGE = "Filtering on id is only valid when running NUnit 3 tests";
+        public const string NO_NAME_FILTER_MESSAGE = "Filtering on name is only valid when running NUnit 3 tests";
+        public const string NO_CLASS_FILTER_MESSAGE = "Filtering on class is only valid when running NUnit 3 tests";
+        public const string NO_METHOD_FILTER_MESSAGE = "Filtering on method is only valid when running NUnit 3 tests";
+        public const string NO_PROPERTY_FILTER_MESSAGE = "Filtering on property value is only valid when running NUnit 3 tests";
+        public const string INVALID_FILTER_MESSAGE = "Invalid filter passed to the NUnit V2 driver: {0} is not a known filter type";
+
+        public static ITestFilter CreateNUnit2TestFilter(string filterXml)
         {
             if (string.IsNullOrEmpty(filterXml))
                 return Core.TestFilter.Empty;
@@ -169,7 +179,7 @@ namespace NUnit.Engine.Drivers
             doc.LoadXml(filterXml);
             var topNode = doc.FirstChild;
             if (topNode.Name != "filter")
-                throw new Exception("Invalid filter passed to NUnit V2 driver: no filter element at top level");
+                throw new NUnitEngineException(NO_FILTER_ELEMENT_MESSAGE);
 
             ITestFilter filter;
             switch (topNode.ChildNodes.Count)
@@ -215,26 +225,29 @@ namespace NUnit.Engine.Drivers
 
                 case "test":
                     if (xmlNode.Attributes["re"] != null)
-                        throw new NUnitEngineException("Filters with regular expressions are only supported when running NUnit 3 tests");
+                        throw new NUnitEngineException(NO_REGULAR_EXPRESSIONS_MESSAGE);
                     return new Core.Filters.SimpleNameFilter(xmlNode.InnerText);
 
                 case "cat":
                     if (xmlNode.Attributes["re"] != null)
-                        throw new NUnitEngineException("Filters with regular expressions are only supported when running NUnit 3 tests");
+                        throw new NUnitEngineException(NO_REGULAR_EXPRESSIONS_MESSAGE);
                     var catFilter = new Core.Filters.CategoryFilter();
                     foreach (string cat in xmlNode.InnerText.Split(COMMA))
                         catFilter.AddCategory(cat);
                     return catFilter;
 
                 case "id":
+                    throw new NUnitEngineException(NO_ID_FILTER_MESSAGE);
                 case "name":
+                    throw new NUnitEngineException(NO_NAME_FILTER_MESSAGE);
                 case "class":
+                    throw new NUnitEngineException(NO_CLASS_FILTER_MESSAGE);
                 case "method":
-                    throw new NUnitEngineException(string.Format("Filtering on {0} is only valid when running NUnit 3 tests", xmlNode.Name));
+                    throw new NUnitEngineException(NO_METHOD_FILTER_MESSAGE);
                 case "prop":
-                    throw new NUnitEngineException("Filtering on a property value is only valid when running NUnit 3 tests");
+                    throw new NUnitEngineException(NO_PROPERTY_FILTER_MESSAGE);
                 default:
-                    throw new NUnitEngineException(string.Format("Invalid filter passed to the NUnit V2 driver: {0} is not a known filter type", xmlNode.Name));
+                    throw new NUnitEngineException(string.Format(INVALID_FILTER_MESSAGE, xmlNode.Name));
             }
         }
     }

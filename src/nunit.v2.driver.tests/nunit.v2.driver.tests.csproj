@@ -58,6 +58,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FilterConverterTests.cs" />
     <Compile Include="NUnit2FrameworkDriverTests.cs" />
     <Compile Include="TestEventAdapterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
