@@ -41,6 +41,8 @@ namespace NUnit.Engine.Drivers.Tests
 
         [TestCase("<filter><test>Some.Test.Name</test></filter>", typeof(Core.Filters.SimpleNameFilter))]
         [TestCase("<filter><test>Some.Test.Name,Another.Test.Name</test></filter>", typeof(Core.Filters.SimpleNameFilter))]
+        [TestCase("<filter><id>123-456</id></filter>", typeof(Core.Filters.IdFilter))]
+        [TestCase("<filter><id>123-456,123-789</id></filter>", typeof(Core.Filters.OrFilter))]
         [TestCase("<filter><cat>Urgent</cat></filter>", typeof(Core.Filters.CategoryFilter))]
         [TestCase("<filter><cat>A,B,C</cat></filter>", typeof(Core.Filters.CategoryFilter))]
         [TestCase("<filter><cat>A</cat><cat>B></cat></filter>", typeof(Core.Filters.AndFilter))]
@@ -55,7 +57,6 @@ namespace NUnit.Engine.Drivers.Tests
 
         [TestCase("<notafilter/>", NUnit2FrameworkDriver.NO_FILTER_ELEMENT_MESSAGE)]
         [TestCase("<filter><test re='1'>Some.Test.*</test></filter>", NUnit2FrameworkDriver.NO_REGULAR_EXPRESSIONS_MESSAGE)]
-        [TestCase("<filter><id>123-456</id></filter>", NUnit2FrameworkDriver.NO_ID_FILTER_MESSAGE)]
         [TestCase("<filter><name>NAME</name></filter>", NUnit2FrameworkDriver.NO_NAME_FILTER_MESSAGE)]
         [TestCase("<filter><class>CLASSNAME</class></filter>", NUnit2FrameworkDriver.NO_CLASS_FILTER_MESSAGE)]
         [TestCase("<filter><method>METHOD</method></filter>", NUnit2FrameworkDriver.NO_METHOD_FILTER_MESSAGE)]
