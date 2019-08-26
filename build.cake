@@ -14,7 +14,7 @@ var GITHUB_SITE = "https://github.com/nunit/nunit-v2-framework-driver";
 var WIKI_PAGE = "https://github.com/nunit/docs/wiki/Console-Command-Line";
 var NUGET_ID = "NUnit.Extension.NUnitV2Driver";
 var CHOCO_ID = "nunit-extension-nunit-v2-driver";
-var VERSION = "3.7.0";
+var VERSION = "3.7.1";
 
 // Metadata used in the nuget and chocolatey packages
 var TITLE = "NUnit 3 - NUnit V2 Framework Driver Extension";
