@@ -20,9 +20,9 @@ var VERSION = "3.8.0";
 var TITLE = "NUnit 3 - NUnit V2 Framework Driver Extension";
 var AUTHORS = new [] { "Charlie Poole" };
 var OWNERS = new [] { "Charlie Poole" };
-var DESCRIPTION = "This extension allows NUnit to load and run tests compiled against earlier versions of the NUnit framework. Versions 2.0 through 2.6.4 are supported.";
+var DESCRIPTION = "This extension allows NUnit to load and run tests compiled against earlier versions of the NUnit framework. Versions 2.0 through 2.7 are supported.";
 var SUMMARY = "NUnit Engine extension allowing execution of tests using NUnit 2.x.";
-var COPYRIGHT = "Copyright (c) 2017 Charlie Poole";
+var COPYRIGHT = "Copyright (c) 2014-2019 Charlie Poole";
 var RELEASE_NOTES = new [] { "See https://raw.githubusercontent.com/nunit/nunit-v2-framework-driver/master/CHANGES.txt" };
 var TAGS = new [] { "nunit", "test", "testing", "tdd", "runner" };
 
