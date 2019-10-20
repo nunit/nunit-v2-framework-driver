@@ -1,3 +1,10 @@
+NUnit V2 Framework Driver Extension 3.8 - October 15, 2019
+
+  Issues Resolved:
+    * 15 Event Listener and Report output incorrect on nunit2 test runs
+    * 22 Use NUnit V2 Core package rather than hard coded 2.6.4 binaries
+    * 29 V2 Driver does not support id filters
+    
 NUnit V2 Framework Driver Extension 3.7 - August 10, 2017
 
   Issues Resolved:
