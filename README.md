@@ -1,6 +1,6 @@
 # NUnit V2 Framework Driver
 
-The NUnit V2 Framework Driver is an engine extension for NUnit 3, allowing it to load and execute tests written against the NUnit V2 test framework. Without the extension, an NUnit 3 installation cannot run V2 tests. The driver supports all versions of NUNit V2, including the latest updates from the [NUnit legaacy project](https://github.com/nunit-legacy/nunitv2).
+The NUnit V2 Framework Driver is an engine extension for NUnit 3, allowing it to load and execute tests written against the NUnit V2 test framework. Without the extension, an NUnit 3 installation cannot run V2 tests. The driver supports all versions of NUnit V2, including the latest updates from the [NUnit legacy project](https://github.com/nunit-legacy/nunitv2).
 
 ## Scope
 
