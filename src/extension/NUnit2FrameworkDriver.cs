@@ -137,7 +137,9 @@ namespace NUnit.Engine.Drivers
             if (Runner.Test == null)
                 return String.Format(LOAD_RESULT_FORMAT, TestID, _name, _fullname, "Error loading test");
 
-            return Runner.Test.ToXml(true).OuterXml;
+            ITestFilter v2Filter = CreateNUnit2TestFilter(filter);
+
+            return Runner.Test.ToXml(v2Filter).OuterXml;
         }
 
         public void StopRun(bool force)

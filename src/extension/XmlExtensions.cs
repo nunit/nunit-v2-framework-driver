@@ -67,6 +67,20 @@ namespace NUnit.Engine.Drivers
             return topNode.FirstChild;
         }
 
+        /// <summary>
+        /// Returns an XmlNode representing a test recursively, applying a filter
+        /// </summary>
+        public static XmlNode ToXml(this ITest test, ITestFilter filter)
+        {
+            var doc = new XmlDocument();
+            doc.LoadXml("<dummy/>");
+            var topNode = doc.FirstChild;
+
+            topNode.AddTest(test, filter);
+
+            return topNode.FirstChild;
+        }
+
         #endregion
 
         #region TestResult Extensions
@@ -89,7 +103,7 @@ namespace NUnit.Engine.Drivers
 
         #region XmlNode Extensions
 
-        // Adds a test-suite or test-case element, without result info
+        // Adds a test-suite or test-case element recursively, applying a filter
         private static XmlNode AddTest(this XmlNode parent, ITest test, bool recursive)
         {
             var thisNode = parent.AddElement(test.IsSuite ? "test-suite" : "test-case");
@@ -116,6 +130,19 @@ namespace NUnit.Engine.Drivers
             if (recursive && test.IsSuite)
                 foreach (ITest child in test.Tests)
                     thisNode.AddTest(child, recursive);
+
+            return thisNode;
+        }
+
+        // Adds a test-suite or test-case element, without result info
+        private static XmlNode AddTest(this XmlNode parent, ITest test, ITestFilter filter)
+        {
+            var thisNode = parent.AddTest(test, false);
+
+            if (test.IsSuite)
+                foreach (ITest child in test.Tests)
+                    if (filter.Pass(child))
+                        thisNode.AddTest(child, filter);
 
             return thisNode;
         }
