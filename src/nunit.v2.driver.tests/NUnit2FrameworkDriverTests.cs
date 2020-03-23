@@ -37,7 +37,8 @@ namespace NUnit.Engine.Drivers.Tests
         private const string V2_DOMAIN_NAME = "v2_test_domain";
         private const string EMPTY_FILTER = "<filter/>";
         private const int TESTCASECOUNT = 76;
-        private const int EXPLICITTESTS = 1;
+        private const int EXPLICIT_TESTS = 1;
+        private const int EXPLICITFILTERING_CATEGORY = 2;
 
         private static readonly string V2_TEST_PATH = Path.Combine(TestContext.CurrentContext.TestDirectory, V2_TEST_DIR);
         private static readonly string ASSEMBLY_PATH = Path.Combine(V2_TEST_PATH, ASSEMBLY_NAME);
@@ -53,23 +54,29 @@ namespace NUnit.Engine.Drivers.Tests
             PerformBasicResultChecks(_driver.Load(ASSEMBLY_PATH, settings));
         }
 
-        [Test]
-        public void Explore()
+        [TestCase("<filter><cat>ExplicitFiltering</cat></filter>", EXPLICITFILTERING_CATEGORY)]
+        [TestCase("<filter><not><not><cat>ExplicitFiltering</cat></not></not></filter>", EXPLICIT_TESTS)]
+        // Running this case last demonstrates that the loaded test is not changed
+        // as a result of the filtering in the firt tests.
+        [TestCase(EMPTY_FILTER, TESTCASECOUNT - EXPLICIT_TESTS)]
+        public void Explore(string filter, int expectedCount)
         {
-            PerformBasicResultChecks(_driver.Explore(EMPTY_FILTER));
+            XmlNode result = GetResult(_driver.Explore(filter));
+            PerformBasicResultChecks(_driver.Explore(filter));
+            Assert.That(result.SelectNodes("//test-case").Count, Is.EqualTo(expectedCount));
         }
 
         [Test]
         public void CountTestCases()
         {
-            Assert.That(_driver.CountTestCases(EMPTY_FILTER), Is.EqualTo(TESTCASECOUNT -EXPLICITTESTS));
+            Assert.That(_driver.CountTestCases(EMPTY_FILTER), Is.EqualTo(TESTCASECOUNT -EXPLICIT_TESTS));
         }
 
         [Test]
         public void ExplicitTestsAreExcluded()
         {
             var filter = "<filter><not><not><cat>ExplicitFiltering</cat></not></not></filter>";
-            Assert.That(_driver.CountTestCases(filter), Is.EqualTo(EXPLICITTESTS));
+            Assert.That(_driver.CountTestCases(filter), Is.EqualTo(EXPLICIT_TESTS));
         }
 
         [Test]
@@ -84,7 +91,7 @@ namespace NUnit.Engine.Drivers.Tests
         {
             XmlNode result = GetResult(_driver.Run(null, EMPTY_FILTER));
             PerformBasicResultChecks(result);
-            Assert.That(result.SelectNodes("//test-case").Count, Is.EqualTo(TESTCASECOUNT-EXPLICITTESTS));
+            Assert.That(result.SelectNodes("//test-case").Count, Is.EqualTo(TESTCASECOUNT-EXPLICIT_TESTS));
         }
 
         private XmlNode GetResult(string xml)
