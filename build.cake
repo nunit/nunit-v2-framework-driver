@@ -1,4 +1,4 @@
-#tool nuget:?package=NUnit.ConsoleRunner&version=3.8.0
+#tool nuget:?package=NUnit.ConsoleRunner&version=3.11.1
 
 //////////////////////////////////////////////////////////////////////
 // PROJECT-SPECIFIC
@@ -89,6 +89,12 @@ if (BuildSystem.IsRunningOnAppVeyor)
     AppVeyor.UpdateBuildVersion(packageVersion);
 }
 
+Teardown(context =>
+{
+    // Make sure we don't leave a test extension installed
+    ClearDriverExtensions();
+});
+
 //////////////////////////////////////////////////////////////////////
 // DEFINE RUN CONSTANTS
 //////////////////////////////////////////////////////////////////////
@@ -98,6 +104,16 @@ var PROJECT_DIR = Context.Environment.WorkingDirectory.FullPath + "/";
 var BIN_DIR = PROJECT_DIR + "bin/" + configuration + "/";
 var BIN_SRC = BIN_DIR; // Source of binaries used in packaging
 var OUTPUT_DIR = PROJECT_DIR + "output/";
+var TOOLS_DIR = PROJECT_DIR + "tools/";
+
+// Console Runner
+var CONSOLE_EXE = TOOLS_DIR + "NUnit.ConsoleRunner/tools/nunit3-console.exe";
+
+// Packages
+var NUGET_PACKAGE_NAME = NUGET_ID + "." + VERSION + ".nupkg";
+var CHOCO_PACKAGE_NAME = CHOCO_ID + "." + VERSION + ".nupkg";
+var NUGET_PACKAGE = OUTPUT_DIR + NUGET_PACKAGE_NAME;
+var CHOCO_PACKAGE = OUTPUT_DIR + CHOCO_PACKAGE_NAME;
 
 // Adjust BIN_SRC if --binaries option was given
 if (binaries != null)
@@ -182,7 +198,6 @@ Task("Test")
     .Does(() =>
     {
         NUnit3(BIN_DIR + UNIT_TEST_ASSEMBLY);
-        NUnit3(BIN_DIR + INTEGRATION_TEST_ASSEMBLY);
     });
 
 //////////////////////////////////////////////////////////////////////
@@ -280,6 +295,65 @@ Task("RePackageChocolatey")
     });
 
 //////////////////////////////////////////////////////////////////////
+// PACKAGE TESTS
+//////////////////////////////////////////////////////////////////////
+
+Task("TestNuGetPackage")
+    .IsDependentOn("RePackageNuGet")
+    .Does(() =>
+    {
+        RunPackageTests(NUGET_ID);
+    });
+
+Task("TestChocolateyPackage")
+    .IsDependentOn("RePackageChocolatey")
+    .Does(() =>
+    {
+        RunPackageTests(CHOCO_ID);
+    });
+
+private void RunPackageTests(string packageId)
+{
+    InstallPackage(packageId);
+
+    NUnit3(BIN_DIR + INTEGRATION_TEST_ASSEMBLY);
+}
+
+private void InstallPackage(string packageId)
+{
+    ClearDriverExtensions();
+
+    NuGetInstall(packageId, new NuGetInstallSettings()
+    {
+        Source = new [] { OUTPUT_DIR },
+        OutputDirectory = TOOLS_DIR
+    });
+
+    // Our copy of NUnit3-console is looking for nuget extensions,
+    // rather than the chocolatey-formatted version. We fake it
+    // by treating the package as a nuget extension, installing
+    // it and then renaming the directory. For simplicity, we do
+    // the mmove for both package types.
+
+    MoveDirectory(TOOLS_DIR + packageId + "." + VERSION, TOOLS_DIR + NUGET_ID );
+}
+
+// Remove all driver extensions, both nuget and chocolatey, so that we are
+// sure that we are testing the extension we want to test.
+private void ClearDriverExtensions()
+{
+    // Delay in case a prior test run is holding open assemblies we want to delete
+    System.Threading.Thread.Sleep(1000);
+
+    var driverExtensionDirectories = GetDirectories(TOOLS_DIR + NUGET_ID + "*");
+    driverExtensionDirectories.Add(GetDirectories(TOOLS_DIR + CHOCO_ID + "*"));
+    DeleteDirectories(driverExtensionDirectories, new DeleteDirectorySettings()
+    {
+        Recursive = true
+    });
+}
+
+//////////////////////////////////////////////////////////////////////
 // TASK TARGETS
 //////////////////////////////////////////////////////////////////////
 
@@ -295,6 +369,11 @@ Task("RePackage")
     .IsDependentOn("RePackageNuGet")
     .IsDependentOn("RePackageChocolatey");
 
+Task("TestPackages")
+    .IsDependentOn("Package")
+    .IsDependentOn("TestNuGetPackage")
+    .IsDependentOn("TestChocolateyPackage");
+
 Task("Appveyor")
     .IsDependentOn("Build")
     .IsDependentOn("Test")
@@ -303,6 +382,12 @@ Task("Appveyor")
 Task("Travis")
     .IsDependentOn("Build")
     .IsDependentOn("Test");
+
+Task("All")
+    .IsDependentOn("Build")
+    .IsDependentOn("Test")
+    .IsDependentOn("Package")
+    .IsDependentOn("TestPackages");
 
 Task("Default")
     .IsDependentOn("Build");
