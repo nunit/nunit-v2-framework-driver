@@ -23,7 +23,7 @@ var OWNERS = new [] { "Charlie Poole" };
 var DESCRIPTION = "This extension allows NUnit to load and run tests compiled against earlier versions of the NUnit framework. Versions 2.0 through 2.7 are supported.";
 var SUMMARY = "NUnit Engine extension allowing execution of tests using NUnit 2.x.";
 var COPYRIGHT = "Copyright (c) 2014-2019 Charlie Poole";
-var RELEASE_NOTES = new [] { "See https://raw.githubusercontent.com/nunit/nunit-v2-framework-driver/master/CHANGES.txt" };
+var RELEASE_NOTES = new [] { "See https://raw.githubusercontent.com/nunit/nunit-v2-framework-driver/main/CHANGES.txt" };
 var TAGS = new [] { "nunit", "test", "testing", "tdd", "runner" };
 
 //////////////////////////////////////////////////////////////////////
@@ -63,7 +63,7 @@ if (BuildSystem.IsRunningOnAppVeyor)
         var branch = AppVeyor.Environment.Repository.Branch;
         var isPullRequest = AppVeyor.Environment.PullRequest.IsPullRequest;
 
-        if (branch == "master" && !isPullRequest)
+        if (branch == "main" && !isPullRequest)
         {
             packageVersion = VERSION + "-dev-" + buildNumber + dbgSuffix;
         }
