@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.852
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31205.134
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nunit.v2.driver", "src\extension\nunit.v2.driver.csproj", "{379058E2-E834-4CC7-B5CD-AC8DFCF82AEA}"
 EndProject
@@ -14,6 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		build.ps1 = build.ps1
 		build.sh = build.sh
 		CHANGES.txt = CHANGES.txt
+		GitVersion.yml = GitVersion.yml
 		LICENSE.txt = LICENSE.txt
 		nunit.v2.driver.nuspec = nunit.v2.driver.nuspec
 		README.md = README.md
@@ -22,6 +23,14 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "v2-test-assembly", "src\v2-test-assembly\v2-test-assembly.csproj", "{B6D3AEAE-ECDA-4047-A9BA-CC6DA3EBEDF8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nunit.v2.driver.tests", "src\nunit.v2.driver.tests\nunit.v2.driver.tests.csproj", "{10659B84-B1DA-4768-9AB7-CDA3EB58EFD4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "cake", "cake", "{0E1320F6-992A-48FA-871B-5FD018BD8BE8}"
+	ProjectSection(SolutionItems) = preProject
+		cake\constants.cake = cake\constants.cake
+		cake\packaging.cake = cake\packaging.cake
+		cake\parameters.cake = cake\parameters.cake
+		cake\versioning.cake = cake\versioning.cake
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,6 +53,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0E1320F6-992A-48FA-871B-5FD018BD8BE8} = {90F23995-721F-40CB-9D64-28FF5FD98250}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E3CE9F5F-EF5F-48B1-B211-42FFCB09BC65}

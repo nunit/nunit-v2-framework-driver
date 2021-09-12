@@ -1,148 +1,60 @@
+#tool nuget:?package=GitVersion.CommandLine&version=5.0.0
 #tool nuget:?package=NUnit.ConsoleRunner&version=3.11.1
-
-//////////////////////////////////////////////////////////////////////
-// PROJECT-SPECIFIC
-//////////////////////////////////////////////////////////////////////
-
-// When copying the script to support a different extension, the
-// main changes needed should be in this section.
-
-var SOLUTION_FILE = "nunit.v2.driver.sln";
-var UNIT_TEST_ASSEMBLY = "nunit.v2.driver.tests.dll";
-var INTEGRATION_TEST_ASSEMBLY = "v2-tests/v2-test-assembly.dll";
-var GITHUB_SITE = "https://github.com/nunit/nunit-v2-framework-driver";
-var WIKI_PAGE = "https://github.com/nunit/docs/wiki/Console-Command-Line";
-var NUGET_ID = "NUnit.Extension.NUnitV2Driver";
-var CHOCO_ID = "nunit-extension-nunit-v2-driver";
-var VERSION = "3.8.0";
-
-// Metadata used in the nuget and chocolatey packages
-var TITLE = "NUnit 3 - NUnit V2 Framework Driver Extension";
-var AUTHORS = new [] { "Charlie Poole" };
-var OWNERS = new [] { "Charlie Poole" };
-var DESCRIPTION = "This extension allows NUnit to load and run tests compiled against earlier versions of the NUnit framework. Versions 2.0 through 2.7 are supported.";
-var SUMMARY = "NUnit Engine extension allowing execution of tests using NUnit 2.x.";
-var COPYRIGHT = "Copyright (c) 2014-2019 Charlie Poole";
-var RELEASE_NOTES = new [] { "See https://raw.githubusercontent.com/nunit/nunit-v2-framework-driver/main/CHANGES.txt" };
-var TAGS = new [] { "nunit", "test", "testing", "tdd", "runner" };
 
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
 //////////////////////////////////////////////////////////////////////
 
+// NOTE: These two constants are set here because constants.cake
+// isn't loaded until after the arguments are parsed.
+//
+// Since GitVersion is only used when running under
+// Windows, the default version should be updated to the
+// next version after each release.
+const string DEFAULT_VERSION = "3.9.0";
+const string DEFAULT_CONFIGURATION = "Release";
+
 var target = Argument("target", "Default");
-var configuration = Argument("configuration", "Debug");
 
-// Special (optional) arguments for the script. You pass these
-// through the Cake bootscrap script via the -ScriptArgs argument
-// for example: 
-//   ./build.ps1 -t RePackageNuget -ScriptArgs --nugetVersion="3.9.9"
-//   ./build.ps1 -t RePackageNuget -ScriptArgs '--binaries="rel3.9.9" --nugetVersion="3.9.9"'
-var nugetVersion = Argument("nugetVersion", (string)null);
-var chocoVersion = Argument("chocoVersion", (string)null);
-var binaries = Argument("binaries", (string)null);
+// Load additional cake files here since some of them
+// depend on the arguments provided.
+#load cake/parameters.cake
 
 //////////////////////////////////////////////////////////////////////
-// SET PACKAGE VERSION
+// SETUP AND TEARDOWN
 //////////////////////////////////////////////////////////////////////
 
-var dbgSuffix = configuration == "Debug" ? "-dbg" : "";
-var packageVersion = VERSION + dbgSuffix;
-
-if (BuildSystem.IsRunningOnAppVeyor)
+Setup<BuildParameters>((context) =>
 {
-    var tag = AppVeyor.Environment.Repository.Tag;
+    var parameters = BuildParameters.Create(context);
 
-    if (tag.IsTag)
-    {
-        packageVersion = tag.Name;
-    }
-    else
-    {
-        var buildNumber = AppVeyor.Environment.Build.Number.ToString("00000");
-        var branch = AppVeyor.Environment.Repository.Branch;
-        var isPullRequest = AppVeyor.Environment.PullRequest.IsPullRequest;
+    if (BuildSystem.IsRunningOnAppVeyor)
+        AppVeyor.UpdateBuildVersion(parameters.PackageVersion + "-" + AppVeyor.Environment.Build.Number);
 
-        if (branch == "main" && !isPullRequest)
-        {
-            packageVersion = VERSION + "-dev-" + buildNumber + dbgSuffix;
-        }
-        else
-        {
-            var suffix = "-ci-" + buildNumber + dbgSuffix;
+    Information("Building {0} version {1} of NUnit Project Loader.", parameters.Configuration, parameters.PackageVersion);
 
-            if (isPullRequest)
-                suffix += "-pr-" + AppVeyor.Environment.PullRequest.Number;
-            else
-                suffix += "-" + branch;
-
-            // Nuget limits "special version part" to 20 chars. Add one for the hyphen.
-            if (suffix.Length > 21)
-                suffix = suffix.Substring(0, 21);
-
-            suffix = suffix.Replace(".", "");
-
-            packageVersion = VERSION + suffix;
-        }
-    }
-
-    AppVeyor.UpdateBuildVersion(packageVersion);
-}
-
-Teardown(context =>
-{
-    // Make sure we don't leave a test extension installed
-    ClearDriverExtensions();
+    return parameters;
 });
 
 //////////////////////////////////////////////////////////////////////
-// DEFINE RUN CONSTANTS
+// DUMP SETTINGS
 //////////////////////////////////////////////////////////////////////
 
-// Directories
-var PROJECT_DIR = Context.Environment.WorkingDirectory.FullPath + "/";
-var BIN_DIR = PROJECT_DIR + "bin/" + configuration + "/";
-var BIN_SRC = BIN_DIR; // Source of binaries used in packaging
-var OUTPUT_DIR = PROJECT_DIR + "output/";
-var TOOLS_DIR = PROJECT_DIR + "tools/";
-
-// Console Runner
-var CONSOLE_EXE = TOOLS_DIR + "NUnit.ConsoleRunner/tools/nunit3-console.exe";
-
-// Packages
-var NUGET_PACKAGE_NAME = NUGET_ID + "." + VERSION + ".nupkg";
-var CHOCO_PACKAGE_NAME = CHOCO_ID + "." + VERSION + ".nupkg";
-var NUGET_PACKAGE = OUTPUT_DIR + NUGET_PACKAGE_NAME;
-var CHOCO_PACKAGE = OUTPUT_DIR + CHOCO_PACKAGE_NAME;
-
-// Adjust BIN_SRC if --binaries option was given
-if (binaries != null)
-{
-    BIN_SRC = binaries;
-    if (!System.IO.Path.IsPathRooted(binaries))
+Task("DumpSettings")
+    .Does<BuildParameters>((parameters) =>
     {
-        BIN_SRC = PROJECT_DIR + binaries;
-        if (!BIN_SRC.EndsWith("/"))
-            BIN_SRC += "/";
-    }
-}
-
-// Package sources for nuget restore
-var PACKAGE_SOURCE = new string[]
-    {
-        "https://www.nuget.org/api/v2",
-        "https://www.myget.org/F/nunit/api/v2"
-    };
+        parameters.DumpSettings();
+    });
 
 //////////////////////////////////////////////////////////////////////
 // CLEAN
 //////////////////////////////////////////////////////////////////////
 
 Task("Clean")
-    .Does(() =>
-{
-    CleanDirectory(BIN_DIR);
-});
+    .Does<BuildParameters>((parameters) =>
+    {
+        CleanDirectory(parameters.OutputDirectory);
+    });
 
 
 //////////////////////////////////////////////////////////////////////
@@ -151,12 +63,12 @@ Task("Clean")
 
 Task("NuGetRestore")
     .Does(() =>
-{
-    NuGetRestore(SOLUTION_FILE, new NuGetRestoreSettings()
     {
-        Source = PACKAGE_SOURCE
+        NuGetRestore(SOLUTION_FILE, new NuGetRestoreSettings()
+        {
+            Source = PACKAGE_SOURCES
+        });
     });
-});
 
 //////////////////////////////////////////////////////////////////////
 // BUILD
@@ -164,15 +76,12 @@ Task("NuGetRestore")
 
 Task("Build")
     .IsDependentOn("NuGetRestore")
-    .Does(() =>
+    .Does<BuildParameters>((parameters) =>
     {
-        if (binaries != null)
-            throw new Exception("The --binaries option may only be specified when re-packaging an existing build.");
-
         if(IsRunningOnWindows())
         {
             MSBuild(SOLUTION_FILE, new MSBuildSettings()
-                .SetConfiguration(configuration)
+                .SetConfiguration(parameters.Configuration)
                 .SetMSBuildPlatform(MSBuildPlatform.Automatic)
                 .SetVerbosity(Verbosity.Minimal)
                 .SetNodeReuse(false)
@@ -183,7 +92,7 @@ Task("Build")
         {
             XBuild(SOLUTION_FILE, new XBuildSettings()
                 .WithTarget("Build")
-                .WithProperty("Configuration", configuration)
+                .WithProperty("Configuration", parameters.Configuration)
                 .SetVerbosity(Verbosity.Minimal)
             );
         }
@@ -195,183 +104,101 @@ Task("Build")
 
 Task("Test")
     .IsDependentOn("Build")
-    .Does(() =>
+    .Does<BuildParameters>((parameters) =>
     {
-        NUnit3(BIN_DIR + UNIT_TEST_ASSEMBLY);
+        NUnit3(parameters.OutputDirectory + UNIT_TEST_ASSEMBLY);
     });
 
 //////////////////////////////////////////////////////////////////////
 // PACKAGE
 //////////////////////////////////////////////////////////////////////
 
-// Additional package metadata
-var PROJECT_URL = new Uri("http://nunit.org");
-var ICON_URL = new Uri("https://cdn.rawgit.com/nunit/resources/master/images/icon/nunit_256.png");
-var LICENSE_URL = new Uri("http://nunit.org/nuget/nunit3-license.txt");
-var PROJECT_SOURCE_URL = new Uri( GITHUB_SITE );
-var PACKAGE_SOURCE_URL = new Uri( GITHUB_SITE );
-var BUG_TRACKER_URL = new Uri(GITHUB_SITE + "/issues");
-var DOCS_URL = new Uri(WIKI_PAGE);
-var MAILING_LIST_URL = new Uri("https://groups.google.com/forum/#!forum/nunit-discuss");
-
-Task("RePackageNuGet")
-    .Does(() => 
+Task("BuildNuGetPackage")
+    .Does<BuildParameters>((parameters) => 
     {
-        CreateDirectory(OUTPUT_DIR);
+        CreateDirectory(parameters.PackageDirectory);
 
-        NuGetPack(
-            new NuGetPackSettings()
-            {
-                Id = NUGET_ID,
-                Version = nugetVersion ?? packageVersion,
-                Title = TITLE,
-                Authors = AUTHORS,
-                Owners = OWNERS,
-                Description = DESCRIPTION,
-                Summary = SUMMARY,
-                ProjectUrl = PROJECT_URL,
-                IconUrl = ICON_URL,
-                LicenseUrl = LICENSE_URL,
-                RequireLicenseAcceptance = false,
-                Copyright = COPYRIGHT,
-                ReleaseNotes = RELEASE_NOTES,
-                Tags = TAGS,
-                //Language = "en-US",
-                OutputDirectory = OUTPUT_DIR,
-                Repository = new NuGetRepository {
-                    Type = "git",
-                    Url = GITHUB_SITE
-                },
-                Files = new [] {
-                    new NuSpecContent { Source = PROJECT_DIR + "LICENSE.txt" },
-                    new NuSpecContent { Source = PROJECT_DIR + "CHANGES.txt" },
-                    new NuSpecContent { Source = PROJECT_DIR + "nunit.v2.driver.addins", Target = "tools" },
-                    new NuSpecContent { Source = BIN_SRC + "nunit.v2.driver.dll", Target = "tools" },
-                    new NuSpecContent { Source = BIN_SRC + "nunit.core.dll", Target = "tools" },
-                    new NuSpecContent { Source = BIN_SRC + "nunit.core.interfaces.dll", Target = "tools" }
-                }
-            });
+        BuildNuGetPackage(parameters);
     });
 
-Task("RePackageChocolatey")
-    .Does(() =>
+Task("InstallNuGetPackage")
+    .Does<BuildParameters>((parameters) =>
     {
-    CreateDirectory(OUTPUT_DIR);
+        // Ensure we aren't inadvertently using the chocolatey install
+        if (DirectoryExists(parameters.ChocolateyInstallDirectory))
+            DeleteDirectory(parameters.ChocolateyInstallDirectory, new DeleteDirectorySettings() { Recursive = true });
 
-    ChocolateyPack(
-        new ChocolateyPackSettings()
-        {
-            Id = CHOCO_ID,
-            Version = chocoVersion ?? packageVersion,
-            Title = TITLE,
-            Authors = AUTHORS,
-            Owners = OWNERS,
-            Description = DESCRIPTION,
-            Summary = SUMMARY,
-            ProjectUrl = PROJECT_URL,
-            IconUrl = ICON_URL,
-            LicenseUrl = LICENSE_URL,
-            RequireLicenseAcceptance = false,
-            Copyright = COPYRIGHT,
-            ProjectSourceUrl = PROJECT_SOURCE_URL,
-            DocsUrl= DOCS_URL,
-            BugTrackerUrl = BUG_TRACKER_URL,
-            PackageSourceUrl = PACKAGE_SOURCE_URL,
-            MailingListUrl = MAILING_LIST_URL,
-            ReleaseNotes = RELEASE_NOTES,
-            Tags = TAGS,
-            //Language = "en-US",
-            OutputDirectory = OUTPUT_DIR,
-            Files = new [] {
-                new ChocolateyNuSpecContent { Source = PROJECT_DIR + "LICENSE.txt", Target = "tools" },
-                new ChocolateyNuSpecContent { Source = PROJECT_DIR + "CHANGES.txt", Target = "tools" },
-                new ChocolateyNuSpecContent { Source = PROJECT_DIR + "VERIFICATION.txt", Target = "tools" },
-                new ChocolateyNuSpecContent { Source = PROJECT_DIR + "nunit.v2.driver.addins", Target = "tools" },
-                new ChocolateyNuSpecContent { Source = BIN_SRC + "nunit.v2.driver.dll", Target = "tools" },
-                new ChocolateyNuSpecContent { Source = BIN_SRC + "nunit.core.dll", Target = "tools" },
-                new ChocolateyNuSpecContent { Source = BIN_SRC + "nunit.core.interfaces.dll", Target = "tools" }
-            }
-        });
+        CleanDirectory(parameters.NuGetInstallDirectory);
+        Unzip(parameters.NuGetPackage, parameters.NuGetInstallDirectory);
+
+        Information($"Unzipped {parameters.NuGetPackageName} to { parameters.NuGetInstallDirectory}");
+    });
+
+Task("TestNuGetPackage")
+    .IsDependentOn("InstallNuGetPackage")
+    .Does<BuildParameters>((parameters) =>
+    {
+        NUnit3(parameters.OutputDirectory + INTEGRATION_TEST_ASSEMBLY);
+    });
+
+Task("BuildChocolateyPackage")
+    .Does<BuildParameters>((parameters) =>
+    {
+        CreateDirectory(parameters.PackageDirectory);
+
+        BuildChocolateyPackage(parameters);
+    });
+
+Task("InstallChocolateyPackage")
+    .Does<BuildParameters>((parameters) =>
+    {
+        // Ensure we aren't inadvertently using the nuget install
+        if (DirectoryExists(parameters.NuGetInstallDirectory))
+            DeleteDirectory(parameters.NuGetInstallDirectory, new DeleteDirectorySettings() { Recursive = true });
+
+        CleanDirectory(parameters.ChocolateyInstallDirectory);
+        Unzip(parameters.ChocolateyPackage, parameters.ChocolateyInstallDirectory);
+
+        Information($"Unzipped {parameters.ChocolateyPackageName} to { parameters.ChocolateyInstallDirectory}");
+    });
+
+Task("TestChocolateyPackage")
+    .IsDependentOn("InstallChocolateyPackage")
+    .Does<BuildParameters>((parameters) =>
+    {
+        // We are using nuget packages for the runner, so add an extra
+        // addins file to allow detecting chocolatey packages
+        string runnerDir = parameters.ToolsDirectory + "NUnit.ConsoleRunner.3.11.1/tools";
+        using (var writer = new StreamWriter(runnerDir + "/choco.engine.addins"))
+            writer.WriteLine("../../nunit-extension-*/tools/");
+
+        NUnit3(parameters.OutputDirectory + INTEGRATION_TEST_ASSEMBLY);
     });
 
 //////////////////////////////////////////////////////////////////////
 // PACKAGE TESTS
 //////////////////////////////////////////////////////////////////////
 
-Task("TestNuGetPackage")
-    .IsDependentOn("RePackageNuGet")
-    .Does(() =>
-    {
-        RunPackageTests(NUGET_ID);
-    });
-
-Task("TestChocolateyPackage")
-    .IsDependentOn("RePackageChocolatey")
-    .Does(() =>
-    {
-        RunPackageTests(CHOCO_ID);
-    });
-
-private void RunPackageTests(string packageId)
+private void RunPackageTests(BuildParameters parameters, string packageId)
 {
-    InstallPackage(packageId);
-
-    NUnit3(BIN_DIR + INTEGRATION_TEST_ASSEMBLY);
-}
-
-private void InstallPackage(string packageId)
-{
-    ClearDriverExtensions();
-
-    NuGetInstall(packageId, new NuGetInstallSettings()
-    {
-        Source = new [] { OUTPUT_DIR },
-        OutputDirectory = TOOLS_DIR
-    });
-
-    // Our copy of NUnit3-console is looking for nuget extensions,
-    // rather than the chocolatey-formatted version. We fake it
-    // by treating the package as a nuget extension, installing
-    // it and then renaming the directory. For simplicity, we do
-    // the mmove for both package types.
-
-    MoveDirectory(TOOLS_DIR + packageId + "." + VERSION, TOOLS_DIR + NUGET_ID );
-}
-
-// Remove all driver extensions, both nuget and chocolatey, so that we are
-// sure that we are testing the extension we want to test.
-private void ClearDriverExtensions()
-{
-    // Delay in case a prior test run is holding open assemblies we want to delete
-    System.Threading.Thread.Sleep(1000);
-
-    var driverExtensionDirectories = GetDirectories(TOOLS_DIR + NUGET_ID + "*");
-    driverExtensionDirectories.Add(GetDirectories(TOOLS_DIR + CHOCO_ID + "*"));
-    DeleteDirectories(driverExtensionDirectories, new DeleteDirectorySettings()
-    {
-        Recursive = true
-    });
+    NUnit3(parameters.OutputDirectory + INTEGRATION_TEST_ASSEMBLY);
 }
 
 //////////////////////////////////////////////////////////////////////
 // TASK TARGETS
 //////////////////////////////////////////////////////////////////////
 
-Task("Rebuild")
-    .IsDependentOn("Clean")
-    .IsDependentOn("Build");
-
 Task("Package")
     .IsDependentOn("Build")
-    .IsDependentOn("RePackage");
+    .IsDependentOn("PackageNuGet")
+    .IsDependentOn("PackageChocolatey");
 
-Task("RePackage")
-    .IsDependentOn("RePackageNuGet")
-    .IsDependentOn("RePackageChocolatey");
+Task("PackageNuGet")
+    .IsDependentOn("BuildNuGetPackage")
+    .IsDependentOn("TestNuGetPackage");
 
-Task("TestPackages")
-    .IsDependentOn("Package")
-    .IsDependentOn("TestNuGetPackage")
+Task("PackageChocolatey")
+    .IsDependentOn("BuildChocolateyPackage")
     .IsDependentOn("TestChocolateyPackage");
 
 Task("Appveyor")
@@ -383,11 +210,10 @@ Task("Travis")
     .IsDependentOn("Build")
     .IsDependentOn("Test");
 
-Task("All")
+Task("Full")
     .IsDependentOn("Build")
     .IsDependentOn("Test")
-    .IsDependentOn("Package")
-    .IsDependentOn("TestPackages");
+    .IsDependentOn("Package");
 
 Task("Default")
     .IsDependentOn("Build");
