@@ -134,6 +134,17 @@ Task("InstallNuGetPackage")
         Information($"Unzipped {parameters.NuGetPackageName} to { parameters.NuGetInstallDirectory}");
     });
 
+Task("VerifyNuGetPackage")
+    .IsDependentOn("InstallNuGetPackage")
+    .Does<BuildParameters>((parameters) =>
+    {
+        Check.That(parameters.NuGetInstallDirectory,
+            HasFiles("CHANGES.txt", "LICENSE.txt"),
+            HasDirectory("tools")
+                .WithFiles("nunit.v2.driver.dll", "nunit.core.dll", "nunit.core.interfaces.dll", "nunit.v2.driver.addins"));
+        Information("Verification was successful!");
+    });
+
 Task("TestNuGetPackage")
     .IsDependentOn("InstallNuGetPackage")
     .Does<BuildParameters>((parameters) =>
@@ -160,6 +171,13 @@ Task("InstallChocolateyPackage")
         Unzip(parameters.ChocolateyPackage, parameters.ChocolateyInstallDirectory);
 
         Information($"Unzipped {parameters.ChocolateyPackageName} to { parameters.ChocolateyInstallDirectory}");
+    });
+
+Task("VerifyChocolateyPackage")
+    .IsDependentOn("InstallChocolateyPackage")
+    .Does<BuildParameters>((parameters) =>
+    {
+
     });
 
 Task("TestChocolateyPackage")
@@ -195,10 +213,12 @@ Task("Package")
 
 Task("PackageNuGet")
     .IsDependentOn("BuildNuGetPackage")
+    .IsDependentOn("VerifyNuGetPackage")
     .IsDependentOn("TestNuGetPackage");
 
 Task("PackageChocolatey")
     .IsDependentOn("BuildChocolateyPackage")
+    .IsDependentOn("VerifyChocolateyPackage")
     .IsDependentOn("TestChocolateyPackage");
 
 Task("Appveyor")
