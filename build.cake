@@ -1,5 +1,7 @@
 #tool nuget:?package=GitVersion.CommandLine&version=5.0.0
+#tool nuget:?package=NUnit.ConsoleRunner&version=3.12.0
 #tool nuget:?package=NUnit.ConsoleRunner&version=3.11.1
+#tool nuget:?package=NUnit.ConsoleRunner&version=3.10.0
 
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
@@ -149,7 +151,8 @@ Task("TestNuGetPackage")
     .IsDependentOn("InstallNuGetPackage")
     .Does<BuildParameters>((parameters) =>
     {
-        NUnit3(parameters.OutputDirectory + INTEGRATION_TEST_ASSEMBLY);
+        //NUnit3(parameters.OutputDirectory + INTEGRATION_TEST_ASSEMBLY);
+        new NuGetPackageTester(parameters).RunPackageTests();
     });
 
 Task("BuildChocolateyPackage")
@@ -177,20 +180,27 @@ Task("VerifyChocolateyPackage")
     .IsDependentOn("InstallChocolateyPackage")
     .Does<BuildParameters>((parameters) =>
     {
-
+        Check.That(parameters.ChocolateyInstallDirectory,
+            HasFiles("CHANGES.txt", "LICENSE.txt"),
+            HasDirectory("tools").WithFiles(
+                "CHANGES.txt", "LICENSE.txt", "VERIFICATION.txt",
+                "nunit.v2.driver.dll", "nunit.core.dll",
+                "nunit.core.interfaces.dll", "nunit.v2.driver.addins"));
+        Information("Verification was successful!");
     });
 
 Task("TestChocolateyPackage")
     .IsDependentOn("InstallChocolateyPackage")
     .Does<BuildParameters>((parameters) =>
     {
-        // We are using nuget packages for the runner, so add an extra
-        // addins file to allow detecting chocolatey packages
-        string runnerDir = parameters.ToolsDirectory + "NUnit.ConsoleRunner.3.11.1/tools";
-        using (var writer = new StreamWriter(runnerDir + "/choco.engine.addins"))
-            writer.WriteLine("../../nunit-extension-*/tools/");
+        //// We are using nuget packages for the runner, so add an extra
+        //// addins file to allow detecting chocolatey packages
+        //string runnerDir = parameters.ToolsDirectory + "NUnit.ConsoleRunner.3.11.1/tools";
+        //using (var writer = new StreamWriter(runnerDir + "/choco.engine.addins"))
+        //    writer.WriteLine("../../nunit-extension-*/tools/");
 
-        NUnit3(parameters.OutputDirectory + INTEGRATION_TEST_ASSEMBLY);
+        new ChocolateyPackageTester(parameters).RunPackageTests();
+//        NUnit3(parameters.OutputDirectory + INTEGRATION_TEST_ASSEMBLY);
     });
 
 //////////////////////////////////////////////////////////////////////
