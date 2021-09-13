@@ -151,7 +151,6 @@ Task("TestNuGetPackage")
     .IsDependentOn("InstallNuGetPackage")
     .Does<BuildParameters>((parameters) =>
     {
-        //NUnit3(parameters.OutputDirectory + INTEGRATION_TEST_ASSEMBLY);
         new NuGetPackageTester(parameters).RunPackageTests();
     });
 
@@ -181,7 +180,6 @@ Task("VerifyChocolateyPackage")
     .Does<BuildParameters>((parameters) =>
     {
         Check.That(parameters.ChocolateyInstallDirectory,
-            HasFiles("CHANGES.txt", "LICENSE.txt"),
             HasDirectory("tools").WithFiles(
                 "CHANGES.txt", "LICENSE.txt", "VERIFICATION.txt",
                 "nunit.v2.driver.dll", "nunit.core.dll",
@@ -200,17 +198,7 @@ Task("TestChocolateyPackage")
         //    writer.WriteLine("../../nunit-extension-*/tools/");
 
         new ChocolateyPackageTester(parameters).RunPackageTests();
-//        NUnit3(parameters.OutputDirectory + INTEGRATION_TEST_ASSEMBLY);
     });
-
-//////////////////////////////////////////////////////////////////////
-// PACKAGE TESTS
-//////////////////////////////////////////////////////////////////////
-
-private void RunPackageTests(BuildParameters parameters, string packageId)
-{
-    NUnit3(parameters.OutputDirectory + INTEGRATION_TEST_ASSEMBLY);
-}
 
 //////////////////////////////////////////////////////////////////////
 // TASK TARGETS
