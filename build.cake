@@ -233,8 +233,7 @@ PackageTest[] PackageTests = new PackageTest[]
             Warnings = 0,
             Inconclusive = 0,
             Skipped = 0,
-            Assemblies = new[] { new ExpectedAssemblyResult(
-                System.IO.Path.GetFullPath("bin/Release/v2-tests/v2-test-assembly.dll"), "net-2.0") }
+            Assemblies = new[] { new ExpectedAssemblyResult("v2-test-assembly.dll", "net-2.0") }
         }
     }
 };

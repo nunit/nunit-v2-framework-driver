@@ -111,6 +111,7 @@ namespace NUnit.Engine.Drivers
             Core.ITest test = Runner.Test;
             // TODO: Handle error where test is null
 
+            var xmlNode = test.ToXml(false);
             return test.ToXml(false).OuterXml;
         }
 

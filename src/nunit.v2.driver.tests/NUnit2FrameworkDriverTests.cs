@@ -47,7 +47,6 @@ namespace NUnit.Engine.Drivers.Tests
         [OneTimeSetUp]
         public void CreateDriver()
         {
-            Console.WriteLine(ASSEMBLY_PATH);
             var domain = AppDomain.CreateDomain(V2_DOMAIN_NAME, null, V2_TEST_PATH, null, false);
             _driver = new NUnit2FrameworkDriver(domain) { ID = "1" };
             var settings = new Dictionary<string, object>();
@@ -113,7 +112,8 @@ namespace NUnit.Engine.Drivers.Tests
             Assert.That(result.Name, Is.EqualTo("test-suite"));
             Assert.That(GetAttribute(result, "type"), Is.EqualTo("Assembly"));
             Assert.That(GetAttribute(result, "id"), Does.StartWith("1-"));
-            Assert.That(GetAttribute(result, "name"), Is.EqualTo(ASSEMBLY_PATH));
+            Assert.That(GetAttribute(result, "name"), Is.EqualTo(ASSEMBLY_NAME));
+            Assert.That(GetAttribute(result, "fullname"), Is.EqualTo(ASSEMBLY_PATH));
             Assert.That(GetAttribute(result, "runstate"), Is.EqualTo("Runnable"));
             Assert.That(GetAttribute(result, "testcasecount"), Is.EqualTo(TESTCASECOUNT.ToString()));
         }
