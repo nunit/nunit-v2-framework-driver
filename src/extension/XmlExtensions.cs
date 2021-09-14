@@ -99,7 +99,13 @@ namespace NUnit.Engine.Drivers
 
             var tn = test.TestName;
             thisNode.AddAttribute("id", string.Format("{0}-{1}", tn.RunnerID, tn.TestID));
-            thisNode.AddAttribute("name", tn.Name);
+
+            // The following logic corrects an idiosyncracy in the V2 framework
+            var name = tn.Name;
+            if (test.IsSuite && test.TestType == "Assembly")
+                name = System.IO.Path.GetFileName(name);
+
+            thisNode.AddAttribute("name", name);
             thisNode.AddAttribute("fullname", tn.FullName);
             if (!string.IsNullOrEmpty(test.MethodName))
                 thisNode.AddAttribute("methodname", test.MethodName);
