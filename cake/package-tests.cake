@@ -27,38 +27,17 @@ public abstract class PackageTester
     {
 		_parameters = parameters;
 		_context = parameters.Context;
-
-		PackageTests.Add(new PackageTest()
-		{
-			Description = "Integration Tests using NUnit V2",
-			Arguments = "bin/Release/v2-tests/v2-test-assembly.dll",
-			TestConsoleVersions = new string[] { "3.12.0", "3.11.1", "3.10.0" },
-			ExpectedResult = new ExpectedResult("Passed")
-			{
-				Total = 75,
-				Passed = 75,
-				Failed = 0,
-				Warnings = 0,
-				Inconclusive = 0,
-				Skipped = 0,
-				Assemblies = new[] { new ExpectedAssemblyResult(
-					System.IO.Path.GetFullPath("bin/Release/v2-tests/v2-test-assembly.dll"), "net-2.0") }
-			}
-		});
 	}
 
 	protected abstract string PackageName { get; }
 	protected abstract string PackageUnderTest { get; }
 	public abstract string InstallDirectory { get; }
 
-	public PackageCheck[] PackageChecks { get; set; }
-	public List<PackageTest> PackageTests = new List<PackageTest>();
-
-	public void RunPackageTests()
+	public void RunPackageTests(IList<PackageTest> packageTests)
     {
 		var reporter = new ResultReporter(PackageName);
 
-		foreach (var packageTest in PackageTests)
+		foreach (var packageTest in packageTests)
 		{
 			foreach (var consoleVersion in packageTest.TestConsoleVersions)
 			{

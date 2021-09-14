@@ -169,7 +169,7 @@ Task("TestNuGetPackage")
     .IsDependentOn("InstallNuGetPackage")
     .Does<BuildParameters>((parameters) =>
     {
-        new NuGetPackageTester(parameters).RunPackageTests();
+        new NuGetPackageTester(parameters).RunPackageTests(PackageTests);
     });
 
 Task("BuildChocolateyPackage")
@@ -215,8 +215,29 @@ Task("TestChocolateyPackage")
         //using (var writer = new StreamWriter(runnerDir + "/choco.engine.addins"))
         //    writer.WriteLine("../../nunit-extension-*/tools/");
 
-        new ChocolateyPackageTester(parameters).RunPackageTests();
+        new ChocolateyPackageTester(parameters).RunPackageTests(PackageTests);
     });
+
+PackageTest[] PackageTests = new PackageTest[]
+{
+    new PackageTest()
+    {
+        Description = "Integration Tests using NUnit V2",
+        Arguments = "bin/Release/v2-tests/v2-test-assembly.dll",
+        TestConsoleVersions = new string[] { "3.12.0", "3.11.1", "3.10.0" },
+        ExpectedResult = new ExpectedResult("Passed")
+        {
+            Total = 75,
+            Passed = 75,
+            Failed = 0,
+            Warnings = 0,
+            Inconclusive = 0,
+            Skipped = 0,
+            Assemblies = new[] { new ExpectedAssemblyResult(
+                System.IO.Path.GetFullPath("bin/Release/v2-tests/v2-test-assembly.dll"), "net-2.0") }
+        }
+    }
+};
 
 //////////////////////////////////////////////////////////////////////
 // PUBLISH
