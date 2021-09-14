@@ -26,13 +26,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nunit.v2.driver.tests", "sr
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "cake", "cake", "{0E1320F6-992A-48FA-871B-5FD018BD8BE8}"
 	ProjectSection(SolutionItems) = preProject
-		cake\constants.cake = cake\constants.cake
 		cake\package-checks.cake = cake\package-checks.cake
 		cake\package-tests.cake = cake\package-tests.cake
 		cake\packaging.cake = cake\packaging.cake
 		cake\parameters.cake = cake\parameters.cake
 		cake\test-reports.cake = cake\test-reports.cake
 		cake\test-results.cake = cake\test-results.cake
+		cake\utilities.cake = cake\utilities.cake
 		cake\versioning.cake = cake\versioning.cake
 	EndProjectSection
 EndProject

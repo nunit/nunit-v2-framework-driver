@@ -3,24 +3,28 @@
 #tool nuget:?package=NUnit.ConsoleRunner&version=3.11.1
 #tool nuget:?package=NUnit.ConsoleRunner&version=3.10.0
 
+////////////////////////////////////////////////////////////////////
+// PROJECT-SPECIFIC CONSTANTS
+//////////////////////////////////////////////////////////////////////
+
+const string SOLUTION_FILE = "nunit.v2.driver.sln";
+const string NUGET_ID = "NUnit.Extension.NUnitV2Driver";
+const string CHOCO_ID = "nunit-extension-nunit-v2-driver";
+const string DEFAULT_VERSION = "3.9.0";
+const string DEFAULT_CONFIGURATION = "Release";
+
+// Load scripts after defining constants
+#load cake/parameters.cake
+
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
 //////////////////////////////////////////////////////////////////////
 
-// NOTE: These two constants are set here because constants.cake
-// isn't loaded until after the arguments are parsed.
-//
-// Since GitVersion is only used when running under
-// Windows, the default version should be updated to the
-// next version after each release.
-const string DEFAULT_VERSION = "3.9.0";
-const string DEFAULT_CONFIGURATION = "Release";
-
 var target = Argument("target", "Default");
 
-// Load additional cake files here since some of them
-// depend on the arguments provided.
-#load cake/parameters.cake
+// Additional arguments defined in the cake scripts:
+//   --configuration
+//   --version
 
 //////////////////////////////////////////////////////////////////////
 // SETUP AND TEARDOWN
@@ -55,9 +59,19 @@ Task("DumpSettings")
 Task("Clean")
     .Does<BuildParameters>((parameters) =>
     {
+        Information("Cleaning " + parameters.OutputDirectory);
         CleanDirectory(parameters.OutputDirectory);
     });
 
+Task("CleanAll")
+    .Does<BuildParameters>((parameters) =>
+    {
+        Information("Cleaning all output directories");
+        CleanDirectory(parameters.ProjectDirectory + "bin/");
+
+        Information("Deleting object directories");
+        DeleteObjectDirectories(parameters);
+    });
 
 //////////////////////////////////////////////////////////////////////
 // INITIALIZE FOR BUILD
@@ -68,7 +82,11 @@ Task("NuGetRestore")
     {
         NuGetRestore(SOLUTION_FILE, new NuGetRestoreSettings()
         {
-            Source = PACKAGE_SOURCES
+            Source = new string[]
+            {
+                "https://www.nuget.org/api/v2",
+                "https://www.myget.org/F/nunit/api/v2"
+            }
         });
     });
 
@@ -108,7 +126,7 @@ Task("Test")
     .IsDependentOn("Build")
     .Does<BuildParameters>((parameters) =>
     {
-        NUnit3(parameters.OutputDirectory + UNIT_TEST_ASSEMBLY);
+        NUnit3(parameters.OutputDirectory + "nunit.v2.driver.tests.dll");
     });
 
 //////////////////////////////////////////////////////////////////////
@@ -151,7 +169,7 @@ Task("TestNuGetPackage")
     .IsDependentOn("InstallNuGetPackage")
     .Does<BuildParameters>((parameters) =>
     {
-        new NuGetPackageTester(parameters).RunPackageTests();
+        new NuGetPackageTester(parameters).RunPackageTests(PackageTests);
     });
 
 Task("BuildChocolateyPackage")
@@ -197,8 +215,29 @@ Task("TestChocolateyPackage")
         //using (var writer = new StreamWriter(runnerDir + "/choco.engine.addins"))
         //    writer.WriteLine("../../nunit-extension-*/tools/");
 
-        new ChocolateyPackageTester(parameters).RunPackageTests();
+        new ChocolateyPackageTester(parameters).RunPackageTests(PackageTests);
     });
+
+PackageTest[] PackageTests = new PackageTest[]
+{
+    new PackageTest()
+    {
+        Description = "Integration Tests using NUnit V2",
+        Arguments = "bin/Release/v2-tests/v2-test-assembly.dll",
+        TestConsoleVersions = new string[] { "3.12.0", "3.11.1", "3.10.0" },
+        ExpectedResult = new ExpectedResult("Passed")
+        {
+            Total = 75,
+            Passed = 75,
+            Failed = 0,
+            Warnings = 0,
+            Inconclusive = 0,
+            Skipped = 0,
+            Assemblies = new[] { new ExpectedAssemblyResult(
+                System.IO.Path.GetFullPath("bin/Release/v2-tests/v2-test-assembly.dll"), "net-2.0") }
+        }
+    }
+};
 
 //////////////////////////////////////////////////////////////////////
 // PUBLISH
