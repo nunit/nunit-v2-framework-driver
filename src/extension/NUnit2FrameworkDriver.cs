@@ -189,13 +189,15 @@ namespace NUnit.Engine.Drivers
             {
                 case 0:
                     filter = Core.TestFilter.Empty;
-                break;
+                    break;
+
                 case 1:
                     filter = FromXml(topNode.FirstChild);
-                break;
+                    break;
+
                 default:
                     filter = FromXml(topNode);
-                break;
+                    break;
             }
 
             if (filter is Core.Filters.NotFilter)
@@ -236,7 +238,14 @@ namespace NUnit.Engine.Drivers
                         throw new NUnitEngineException(NO_REGULAR_EXPRESSIONS_MESSAGE);
                     var catFilter = new Core.Filters.CategoryFilter();
                     foreach (string cat in xmlNode.InnerText.Split(COMMA))
+                    {
+                        if (cat.EndsWith(">"))
+                        {
+                            Console.WriteLine("Appending category " + cat + " from");
+                            Console.WriteLine(xmlNode.OuterXml);
+                        }
                         catFilter.AddCategory(cat);
+                    }
                     return catFilter;
 
                 case "id":
