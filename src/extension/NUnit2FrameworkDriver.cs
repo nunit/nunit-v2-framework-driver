@@ -214,18 +214,20 @@ namespace NUnit.Engine.Drivers
             {
                 case "filter":
                 case "and":
-                    var andFilter = new Core.Filters.AndFilter();
-                    foreach (XmlNode childNode in xmlNode.ChildNodes)
-                        andFilter.Add(FromXml(childNode));
-                    return andFilter;
+                    return CreateAndFilter(xmlNode.ChildNodes);
 
                 case "or":
-                    var orFilter = new Core.Filters.OrFilter();
-                    foreach (System.Xml.XmlNode childNode in xmlNode.ChildNodes)
-                        orFilter.Add(FromXml(childNode));
-                    return orFilter;
+                    if (ShouldTransformOrFilter(xmlNode))
+                        return CreateNegatedAndFilter(xmlNode.ChildNodes);
+                    else
+                        return CreateOrFilter(xmlNode.ChildNodes);
 
                 case "not":
+                    // Temporarily removed because it messes up OrFilter negation
+                    //// Eliminate doubled not filters
+                    //XmlNode child = xmlNode.FirstChild;
+                    //if (child.Name == "not")
+                    //    return FromXml(child.FirstChild);
                     return new Core.Filters.NotFilter(FromXml(xmlNode.FirstChild));
 
                 case "test":
@@ -238,14 +240,7 @@ namespace NUnit.Engine.Drivers
                         throw new NUnitEngineException(NO_REGULAR_EXPRESSIONS_MESSAGE);
                     var catFilter = new Core.Filters.CategoryFilter();
                     foreach (string cat in xmlNode.InnerText.Split(COMMA))
-                    {
-                        if (cat.EndsWith(">"))
-                        {
-                            Console.WriteLine("Appending category " + cat + " from");
-                            Console.WriteLine(xmlNode.OuterXml);
-                        }
                         catFilter.AddCategory(cat);
-                    }
                     return catFilter;
 
                 case "id":
@@ -287,6 +282,43 @@ namespace NUnit.Engine.Drivers
                 default:
                     throw new NUnitEngineException(string.Format(INVALID_FILTER_MESSAGE, xmlNode.Name));
             }
+        }
+
+        private static bool ShouldTransformOrFilter(XmlNode xmlNode)
+        {
+            // Only Or is handled for now
+            if (xmlNode.Name != "or")
+                return false;
+
+            foreach (XmlNode child in xmlNode.ChildNodes)
+                if (child.Name != "not")
+                    return false;
+
+            return true;
+        }
+
+        private static OrFilter CreateOrFilter(XmlNodeList childNodes)
+        {
+            var orFilter = new OrFilter();
+            foreach (XmlNode child in childNodes)
+                orFilter.Add(FromXml(child));
+            return orFilter;
+        }
+
+        private static AndFilter CreateAndFilter(XmlNodeList childNodes)
+        {
+            var andFilter = new AndFilter();
+            foreach (XmlNode child in childNodes)
+                andFilter.Add(FromXml(child));
+            return andFilter;
+        }
+
+        private static NotFilter CreateNegatedAndFilter(XmlNodeList childNodes)
+        {
+            var andFilter = new AndFilter();
+            foreach (XmlNode child in childNodes)
+                andFilter.Add((FromXml(child) as NotFilter).BaseFilter);
+            return new NotFilter(andFilter);
         }
     }
 }

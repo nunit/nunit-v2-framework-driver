@@ -227,8 +227,8 @@ PackageTest[] PackageTests = new PackageTest[]
         TestConsoleVersions = new string[] { "3.12.0", "3.11.1", "3.10.0" },
         ExpectedResult = new ExpectedResult("Passed")
         {
-            Total = 75,
-            Passed = 75,
+            Total = 76,
+            Passed = 76,
             Failed = 0,
             Warnings = 0,
             Inconclusive = 0,

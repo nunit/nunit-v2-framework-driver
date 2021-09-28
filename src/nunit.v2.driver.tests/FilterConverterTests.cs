@@ -51,6 +51,11 @@ namespace NUnit.Engine.Drivers.Tests
         [TestCase("<filter><not><cat>A</cat></not></filter>", "<not <cat A>>")]
         [TestCase("<filter><and><not><cat>Db</cat></not><not><cat>UnitTest</cat></not></and></filter>",
             "<and <not <cat Db>> <not <cat UnitTest>>>")]
+        // Tests transformation of !A or !B into  !(A and B)
+        [TestCase("<filter><or><not><cat>Db</cat></not><not><cat>UnitTest</cat></not></or></filter>",
+            "<not <and <cat Db> <cat UnitTest>>>")]
+        [TestCase("<filter><or><not><not><cat>Db</cat></not></not><not><cat>UnitTest</cat></not></or></filter>",
+            "<not <and <not <cat Db>> <cat UnitTest>>>")]
         public void CreateNUnit2Filter(string input, string output)
         {
             var filter = NUnit2FrameworkDriver.CreateNUnit2TestFilter(input);

@@ -27,25 +27,21 @@ using System.Text;
 
 using NUnit.Framework;
 
-namespace NUnit.Core.Tests.Explicit
+namespace NUnit.Core.Tests
 {
-  [TestFixture]
-  public class ExplicitFiltering
-  {
-    [Explicit]
-    [Category("ExplicitFiltering")]
-    [Test]
-    public void Explicit()
+    [TestFixture]
+    public class ExplicitFiltering
     {
-      Assert.True(true);
-    }
+        [Test, Explicit]
+        [Category("ExplicitCategory")]
+        public void ExplicitTest() { }
 
-    [Test]
-    [Category("ExplicitFiltering")]
-    public void Implicit()
-    {
-      Assert.True(true);
-    }
+        [Test]
+        [Category("AnotherCategory")]
+        public void AnotherTest() { }
 
-  }
+        [Test]
+        [Category("AnotherCategory")]
+        public void YetAnotherTest() { }
+    }
 }
