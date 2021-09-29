@@ -1,5 +1,24 @@
 NUnit V2 Framework Driver Extension 3.9.0 - September 28, 2021
 
+  Bugs
+
+    * 21 Explicitness of tests is ignored in the presence of a filter with adding multiple negated categories
+    * 27 Exploring tests with filter returns all tests
+    * 39 Name and Fullname are the same in V3 XML format
+
+  Build
+
+    * 36 Publish 'dev' builds on MyGet
+    * 37 Run integration tests on packages
+    * 40 Automate GitHub Release Process
+    * 41 Change default branch from master to main
+    * 42 Standardize build scripts for extensions
+    * 45 Automate the GitHub release process
+
+  Documentation
+
+    * 33 Create a level of support statement
+
 NUnit V2 Framework Driver Extension 3.8.0 - October 15, 2019
 
   Issues Resolved:
